@@ -419,7 +419,7 @@ ovc.innerHTML=`<h2>Other scorecards</h2><div class="sub">Tap a name to see their
 ovc.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{otherView=M[+b.dataset.o];fillOther();ovc.scrollTop=0})}
 
 // ---- hidden admin guide: tap the banner 5 times quickly ----
-{let taps=[];const hit=e=>{const n=Date.now();taps=taps.filter(t=>n-t<3000);taps.push(n);if(taps.length>=5){taps=[];if(navigator.vibrate)navigator.vibrate(40);openI=null;show(document.getElementById("agt").innerHTML+'<button class="closebar">Close</button>')}};
+{let taps=[];const hit=e=>{const n=Date.now();if(taps.length&&n-taps[taps.length-1]>1500)taps=[];taps.push(n);if(taps.length>=5){taps=[];if(navigator.vibrate)navigator.vibrate(40);openI=null;show(document.getElementById("agt").innerHTML+'<button class="closebar">Close</button>')}};
 ["header","#nxt"].forEach(q=>{const el=document.querySelector(q);Object.assign(el.style,{touchAction:"manipulation",userSelect:"none",webkitUserSelect:"none",webkitTouchCallout:"none"});el.addEventListener("pointerdown",hit)})}
 // ---- on-pace tracker ----
 function typical(){const H=[],L=[];Object.keys(hl).forEach(k=>{const v=hl[k];if(v&&v.high!=null)H.push(v.high);if(v&&v.low!=null)L.push(v.low)});const av=a=>a.length?Math.round(a.reduce((p,q)=>p+q,0)/a.length):null;return{H:av(H),L:av(L),n:Math.max(H.length,L.length)}}
@@ -546,6 +546,6 @@ async function refreshCur(){fails=0;const c=curWeek();await loadWeek(c);if(c>0&&
 function stamp(){document.getElementById("upd").textContent=fails?"Offline — showing saved scores.":"Live scores updated "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
 setTitle();albUpd();render();refreshAll();hintUpd();joinPool();loadHL();setInterval(loadHL,120000);if(alertsOn&&pushReady())pushSubscribe();setTimeout(onboard,1500);setInterval(refreshCur,60000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){refreshCur();loadHL()}});
-if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+if("serviceWorker"in navigator){const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>{r.update().catch(()=>{});setInterval(()=>r.update().catch(()=>{}),600000)});let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!rl&&!ov.classList.contains("on")){rl=true;location.reload()}})}
 </script></body></html>
 
