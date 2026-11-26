@@ -102,7 +102,7 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <p class="hint" id="hint">Tap a week to see its games. Hold a finished week's square to enter the winning high &amp; low scores.</p>
 <p class="hint" id="upd"></p>
 <div class="bar"><button id="addb">Add your own squares</button><button id="helpb">How to use this app</button><button id="shareb">Share this app</button></div>
-<div style="text-align:center"><button id="alb" style="display:inline-block;margin:10px 4px 0">🔔 Game alerts: Off</button><button id="plb0" style="display:inline-block;margin:10px 4px 0;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink)">🏆 Pool</button><button id="tvb" style="display:inline-block;margin:10px 4px 0;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink)">📺 My TV</button></div>
+<div style="text-align:center"><button id="alb" style="display:inline-block;margin:10px 4px 0">🔔 Game alerts: Off</button><button id="plb0" style="display:inline-block;margin:10px 4px 0;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink)">🏆 Leaderboard</button><button id="tvb" style="display:inline-block;margin:10px 4px 0;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink)">📺 My TV</button></div>
 <div id="help" style="display:none"><h2>How to use</h2><div class="sub" id="hsub">Debbie's Squares</div>
 <h4>The main screen</h4><ul>
 <li>Each square is one week of the season, showing your 3 teams for that week.</li>
@@ -133,9 +133,9 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <li><b>Android:</b> works right from Chrome. Adding the app to your home screen (below) helps alerts arrive reliably.</li>
 <li><b>iPhone:</b> alerts only work from the Home Screen app (iOS 16.4 or newer): in Safari tap <b>Share</b> → <b>Add to Home Screen</b> → <b>Add</b>, open <b>Squares</b> from the new icon, then turn alerts on there. The app shows you these steps the first time you open it in Safari.</li>
 <li>Not getting alerts? Check that notifications are allowed for the app in your phone's Settings.</li></ul>
-<h4>🏆 Pool &amp; leaderboard</h4><ul>
-<li>Tap <b>🏆 Pool</b> to see your pool code. Debbie's pool is <b>DEBBIE</b>. Others in her contest join with that code; a different group can start their own pool.</li>
-<li>Everyone in a pool shares the same winning high &amp; low, and shows up on the <b>Leaderboard</b>: season totals, projected finish, weeks won, and who won (or came closest to) each week's high and low.</li></ul>
+<h4>🏆 Leaderboard</h4><ul>
+<li>Everyone using the app is on one shared <b>Leaderboard</b>, nothing to sign up for. Tap <b>🏆 Leaderboard</b> to see season totals, projected finish, weeks won, and who won (or came closest to) each week's high and low.</li>
+<li>Everyone sees the same winning high &amp; low numbers.</li></ul>
 <h4>📈 On pace</h4><ul>
 <li>The current week shows what your teams are <b>on pace</b> for (points so far + projected points still to come) next to a <b>typical</b> winning high and low (the average of the weeks entered so far).</li>
 <li>Tap the week for details, like "~6 short of a typical high." It updates as games are played.</li></ul>
@@ -144,7 +144,7 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <li>After a week is over, <b>press and hold</b> its square for about half a second.</li>
 <li>Type the winning <b>HIGH</b> score and tap <b>Save</b>, then the winning <b>LOW</b> score and tap <b>Save</b>.</li>
 <li>Tap <b>Skip</b> to leave one unchanged. Hold the square again any time to fix a number.</li>
-<li>They're <b>shared with your pool</b>. If the pool is locked, only the <b>admin</b> can enter them: the first time, it asks for the admin PIN, then remembers it on that phone.</li>
+<li>They're <b>shared with everyone</b>, and only the <b>admin</b> can enter them: the first time, it asks for the admin PIN, then remembers it on that phone.</li>
 <li>Once entered, the square shows how close you came, like <b style="color:var(--accent)">"🏆 Won the low!"</b> or "8 from the low".</li>
 <li>The season chart (tap <b>Season total</b>) shows every week's total next to the winning high and low.</li></ul>
 <h4>Add your own squares (different sheet?)</h4>
@@ -182,7 +182,7 @@ function esc(t){return String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 let PROF=ls("ds_prof",null);
 const TEAMS=i=>PROF?(PROF.teams[i]||[]):W[i][1];
 const poolKey=()=>PROF?"ds_pool_"+PROF.name:"ds_pool";
-let POOL=ls(poolKey(),PROF?"":"DEBBIE");
+let POOL="DEBBIE";
 const hlKey=()=>"ds_hl_"+(POOL||"local");
 let hl=ls(hlKey(),null)||(POOL==="DEBBIE"?Object.assign({},ls("ds_hl",{}),ls("ds_hl_shared",{})):{});
 // all[i] = {ABBR: entry} for every team ESPN returned that week
@@ -244,7 +244,7 @@ rows.forEach((o,i)=>{const x=L+i*(bw+gap);if(o.w.tot)g+=`<rect x="${x}" y="${y(o
 if(o.r.high!=null)g+=`<line x1="${x-2}" x2="${x+bw+2}" y1="${y(o.r.high)}" y2="${y(o.r.high)}" stroke="#ff6b35" stroke-width="2.5"/>`;if(o.r.low!=null)g+=`<line x1="${x-2}" x2="${x+bw+2}" y1="${y(o.r.low)}" y2="${y(o.r.low)}" stroke="#1565c0" stroke-width="2.5"/>`;g+=`<text x="${x+bw/2}" y="${H+24}" text-anchor="middle">${i+1}</text>`});g+=`</svg>`;
 show(`<h2>Season</h2><div class="sub">${esc(PROF?PROF.name+"'s":"Debbie's")} points by week</div><div class="st2"><div><b>${T}</b>Season total</div><div><b>${P?"~"+(T+P):T}</b>Projected finish</div><div><b>${wins}</b>Weeks won</div></div>${g}
 <div class="lg"><span><i style="background:#1b7f3b"></i>Your total</span><span><i style="background:#1b7f3b;opacity:.3"></i>Projected</span><span><i style="background:#ff6b35"></i>Winning high</span><span><i style="background:#1565c0"></i>Winning low</span></div>
-${best>=0?`<p class="sub" style="margin-top:10px">Best week so far: Week ${bi+1} with ${best} points.</p>`:""}<p class="sub">Winning high/low lines show once they're entered.</p>${POOL?`<button class="btn" style="width:100%" onclick="openBoard()">🏆 Pool leaderboard</button>`:""}<button class="closebar">Close</button>`)};
+${best>=0?`<p class="sub" style="margin-top:10px">Best week so far: Week ${bi+1} with ${best} points.</p>`:""}<p class="sub">Winning high/low lines show once they're entered.</p><button class="btn" style="width:100%" onclick="openBoard()">🏆 Leaderboard</button><button class="closebar">Close</button>`)};
 // ---- next game ----
 function nextGame(){const now=Date.now();let live=[],nx=null;W.forEach((_,i)=>{const d=wk(i);TEAMS(i).forEach(t=>{const x=d[t];if(!x||x.bye)return;if(x.state==="in")live.push({x,t});else if(x.state==="pre"&&x.date){const ms=new Date(x.date)-now;if(ms>-3*3600e3&&(!nx||new Date(x.date)<new Date(nx.x.date)))nx={x,t,i}}})});return{live,nx}}
 function cd(ms){if(ms<=0)return"starting now";const m=Math.round(ms/6e4),d=Math.floor(m/1440),h=Math.floor(m%1440/60),mm=m%60;return"in "+(d?d+"d "+h+"h":h?h+"h "+mm+"m":mm+"m")}
@@ -290,9 +290,9 @@ const r=await fetch(`${SUPA_URL}/rest/v1/squares_pool_weekly?select=week,high,lo
 const pend=ls("ds_hl_pend_"+POOL,[]);if(pend.length){lsSet("ds_hl_pend_"+POOL,[]);for(const i of pend)await saveHL(i)}}catch(e){}}
 async function saveHL(i){if(!POOL)return true;const v=hl[i]||{};try{const ok=await rpcJ("squares_set_week2",{p_pool:POOL,p_week:i+1,p_high:v.high??null,p_low:v.low??null,p_by:meName(),p_pin:ls("ds_pin_"+POOL,"")||null});return ok!==false}catch(e){const p=ls("ds_hl_pend_"+POOL,[]);if(!p.includes(i)){p.push(i);lsSet("ds_hl_pend_"+POOL,p)}return true}}
 async function adminOK(){if(!POOL||!poolInfo.locked)return true;let pin=ls("ds_pin_"+POOL,"");try{if(pin&&await rpcJ("squares_check_pin",{p_code:POOL,p_pin:pin}))return true}catch(e){return!!pin}
-const p=await dialog(`Pool ${POOL} is locked. Enter the admin PIN:`,"",true);if(p==null)return false;try{if(await rpcJ("squares_check_pin",{p_code:POOL,p_pin:p})){lsSet("ds_pin_"+POOL,p);hintUpd();return true}}catch(e){alert("Couldn't check the PIN — are you online?");return false}
+const p=await dialog("Enter the admin PIN:","",true);if(p==null)return false;try{if(await rpcJ("squares_check_pin",{p_code:POOL,p_pin:p})){lsSet("ds_pin_"+POOL,p);hintUpd();return true}}catch(e){alert("Couldn't check the PIN — are you online?");return false}
 alert("That PIN isn't right. Only the pool admin can enter the winning high & low.");return false}
-function hintUpd(){const el=document.getElementById("hint");if(!el)return;const admin=!POOL||!poolInfo.locked||ls("ds_pin_"+POOL,"");el.innerHTML="Tap a week to see its games. "+(admin?"Hold a finished week's square to enter the winning high &amp; low.":"The winning high &amp; low are entered by your pool's admin.")}
+function hintUpd(){const el=document.getElementById("hint");if(!el)return;const admin=!POOL||!poolInfo.locked||ls("ds_pin_"+POOL,"");el.innerHTML="Tap a week to see its games. "+(admin?"Hold a finished week's square to enter the winning high &amp; low.":"The winning high &amp; low are entered by the admin.")}
 function memberId(){const k="ds_mid_"+meName();let id=ls(k,null);if(!id){id=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));lsSet(k,id)}return id}
 async function joinPool(){if(!POOL||!SUPA_URL.startsWith("https://"))return;try{await rpcJ("squares_join",{p_id:memberId(),p_pool:POOL,p_name:meName(),p_teams:W.map((_,i)=>TEAMS(i))})}catch(e){}}
 function setPool(code){POOL=(code||"").toUpperCase().trim();lsSet(poolKey(),POOL);poolInfo=ls("ds_pinfo_"+POOL,{exists:false,locked:false});hl=ls(hlKey(),{});render();hintUpd();joinPool();loadHL()}
@@ -307,14 +307,14 @@ const q=id=>document.getElementById(id);if(q("plb"))q("plb").onclick=openBoard;i
 q("pjb").onclick=async()=>{const c=q("pjc").value.toUpperCase().trim();if(!c)return;try{const inf=await rpcJ("squares_pool_info",{p_code:c});if(!inf||!inf.exists){alert(`No pool called ${c}. Check the code, or start it as a new pool below.`);return}lsSet("ds_pinfo_"+c,inf)}catch(e){alert("Couldn't reach the server — are you online?");return}setPool(c);openPool()};
 q("pnb").onclick=async()=>{const c=q("pnc").value.toUpperCase().trim().replace(/[^A-Z0-9]/g,"");const pin=q("pnp").value.trim();if(c.length<3){alert("Use at least 3 letters or numbers for the code.");return}try{const ok=await rpcJ("squares_create_pool",{p_code:c,p_pin:pin});if(!ok){alert(`${c} is already taken. Pick another code, or Join it above.`);return}}catch(e){alert("Couldn't reach the server — are you online?");return}if(pin)lsSet("ds_pin_"+c,pin);lsSet("ds_pinfo_"+c,{exists:true,locked:!!pin});setPool(c);alert(`Pool ${c} created! Share the code with your group.`);openPool()}}
 function totFor(i,teams){const a=all[i]||{};let tot=0,proj=0,any=false,live=false,pre=false;(teams||[]).forEach(t=>{const x=a[t];if(!x){if(fetched[i])return;pre=true;return}if(x.bye)return;if(x.state==="pre"){pre=true;if(x.proj!=null)proj+=x.proj}else{tot+=x.score;any=true;if(x.state==="in")live=true}});return{tot,proj,any,done:any&&!pre&&!live&&!!fetched[i]}}
-async function openBoard(){openI=null;if(!POOL){openPool();return}show(`<h2>Leaderboard</h2><div class="sub">Pool ${esc(POOL)} · loading…</div><button class="closebar">Close</button>`);await joinPool();let mem=[];try{mem=await rpcJ("squares_pool_members",{p_pool:POOL})||[]}catch(e){ovc.querySelector(".sub").textContent="Couldn't load the leaderboard — are you online?";return}
+async function openBoard(){openI=null;if(!POOL){openPool();return}show(`<h2>Leaderboard</h2><div class="sub">Loading…</div><button class="closebar">Close</button>`);await joinPool();let mem=[];try{mem=await rpcJ("squares_pool_members",{p_pool:POOL})||[]}catch(e){ovc.querySelector(".sub").textContent="Couldn't load the leaderboard — are you online?";return}
 const by={};mem.forEach(m=>{if(!by[m.name]||m.updated_at>by[m.name].updated_at)by[m.name]=m});const M=Object.values(by).map(m=>{let S=0,P=0,wins=0;const wk=W.map((_,i)=>{const r=totFor(i,m.teams&&m.teams[i]);S+=r.tot;P+=r.proj;const h=hl[i]||{};if(r.done&&((h.high!=null&&r.tot>=h.high)||(h.low!=null&&r.tot<=h.low)))wins++;return r});return{name:m.name,S,P,wins,wk}}).sort((a,b)=>b.S-a.S);
-let h=`<h2>Leaderboard</h2><div class="sub">Pool ${esc(POOL)} · ${M.length} player${M.length===1?"":"s"}</div><table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:var(--mute);font-size:11px"><th>#</th><th>Name</th><th style="text-align:right">Season</th><th style="text-align:right">Proj. finish</th><th style="text-align:right">Wins</th></tr>`+
+let h=`<h2>Leaderboard</h2><div class="sub">${M.length} player${M.length===1?"":"s"}</div><table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:var(--mute);font-size:11px"><th>#</th><th>Name</th><th style="text-align:right">Season</th><th style="text-align:right">Proj. finish</th><th style="text-align:right">Wins</th></tr>`+
 M.map((m,k)=>`<tr style="border-top:1px solid var(--line)${m.name===meName()?";background:var(--cur)":""}"><td style="padding:6px 2px">${k+1}</td><td><b>${esc(m.name)}</b></td><td style="text-align:right;font-weight:700">${m.S}</td><td style="text-align:right;color:var(--mute)">~${m.S+m.P}</td><td style="text-align:right">${m.wins?"🏆 "+m.wins:"0"}</td></tr>`).join("")+`</table><h4 style="margin:16px 0 4px">Week by week</h4>`;
 let any=false;for(let i=17;i>=0;i--){const hv=hl[i];if(!hv||(hv.high==null&&hv.low==null))continue;const done=M.filter(m=>m.wk[i].done);if(!done.length)continue;any=true;let line=`<div class="gm" style="padding:8px"><b>Week ${i+1}</b>`;
 if(hv.high!=null){const top=[...done].sort((a,b)=>b.wk[i].tot-a.wk[i].tot)[0];const w=done.filter(m=>m.wk[i].tot>=hv.high);line+=`<div style="font-size:13px;margin-top:3px"><span class="h" style="color:var(--accent);font-weight:700">High ${hv.high}:</span> `+(w.length?w.map(m=>`🏆 ${esc(m.name)} (${m.wk[i].tot})`).join(", "):`closest ${esc(top.name)} ${top.wk[i].tot} — ${hv.high-top.wk[i].tot} short`)+`</div>`}
 if(hv.low!=null){const bot=[...done].sort((a,b)=>a.wk[i].tot-b.wk[i].tot)[0];const w=done.filter(m=>m.wk[i].tot<=hv.low);line+=`<div style="font-size:13px"><span style="color:#1565c0;font-weight:700">Low ${hv.low}:</span> `+(w.length?w.map(m=>`🏆 ${esc(m.name)} (${m.wk[i].tot})`).join(", "):`closest ${esc(bot.name)} ${bot.wk[i].tot} — ${bot.wk[i].tot-hv.low} above`)+`</div>`}
-h+=line+`</div>`}if(!any)h+=`<p class="sub">Week results show here once the winning high &amp; low are entered.</p>`;h+=`<p class="sub">Everyone in pool ${esc(POOL)} shows up here once they open the app.</p><button class="closebar">Close</button>`;ovc.innerHTML=h}
+h+=line+`</div>`}if(!any)h+=`<p class="sub">Week results show here once the winning high &amp; low are entered.</p>`;h+=`<p class="sub">Everyone using the app shows up here once they open it.</p><button class="closebar">Close</button>`;ovc.innerHTML=h}
 // ---- on-pace tracker ----
 function typical(){const H=[],L=[];Object.keys(hl).forEach(k=>{const v=hl[k];if(v&&v.high!=null)H.push(v.high);if(v&&v.low!=null)L.push(v.low)});const av=a=>a.length?Math.round(a.reduce((p,q)=>p+q,0)/a.length):null;return{H:av(H),L:av(L),n:Math.max(H.length,L.length)}}
 function paceHTML(i,big){const r=weekTotals(i);if(r.done||(!r.any&&!r.anyP))return"";const fin=r.tot+r.proj;const T=typical();if(T.H==null&&T.L==null)return big?`<div class="vs n" style="text-align:center;font-size:13px">On pace for ~${fin}</div>`:"";
@@ -370,7 +370,7 @@ h+=paceHTML(i,true);if(any&&!anyP&&!teams.some(t=>d[t]&&d[t].state==="in"))h+=`<
 h+=`<button class="closebar">Close</button>`;ovc.innerHTML=h;const rb=document.getElementById("rcp");if(rb)rb.onclick=()=>makeRecap(i)}
 // ---- Help ----
 document.getElementById("tvb").onclick=()=>openTV();
-document.getElementById("plb0").onclick=()=>openPool();
+document.getElementById("plb0").onclick=()=>openBoard();
 document.getElementById("helpb").onclick=()=>{openI=null;show(document.getElementById("help").innerHTML)};
 // ---- Share ----
 document.getElementById("shareb").onclick=()=>{openI=null;show(`<div class="big"><h2>Share this app</h2><div class="sub">Scan the code or send the link</div><img class="qr" src="qr.svg" alt="QR code for the app">
@@ -420,13 +420,13 @@ const prg=document.getElementById("prg"),rvw=document.getElementById("rvw");
 const bindReview=()=>{rvw.innerHTML=reviewHTML();rvw.querySelectorAll("select").forEach(s=>s.onchange=()=>{draft[s.dataset.w][s.dataset.k]=s.value;const c=s.closest(".c");c.classList.toggle("bad",draft[s.dataset.w].filter(Boolean).length<3)});
 document.getElementById("svb").onclick=()=>{const nm=document.getElementById("fname").value.trim();if(!nm){alert("Please type your name first.");document.getElementById("fname").focus();return}
 const miss=draft.map((t,i)=>t.filter(Boolean).length<3?i+1:0).filter(Boolean);if(miss.length&&!confirm(`Weeks ${miss.join(", ")} have fewer than 3 teams. Save anyway?`))return;
-PROF={name:nm,teams:draft.map(t=>t.filter(Boolean))};lsSet("ds_prof",PROF);POOL=ls(poolKey(),"");hl=ls(hlKey(),{});if(alertsOn)pushSubscribe();setTitle();closeWk();render();refreshAll();setTimeout(()=>openTV(),300)}};
+PROF={name:nm,teams:draft.map(t=>t.filter(Boolean))};lsSet("ds_prof",PROF);joinPool();if(alertsOn)pushSubscribe();setTitle();closeWk();render();refreshAll();setTimeout(()=>openTV(),300)}};
 document.getElementById("rdb").onclick=async()=>{const f=document.getElementById("fimg").files[0];if(!f){alert("Choose your screenshot first.");return}
 try{prg.textContent="Loading the reader (first time takes a moment)…";await loadTess();prg.textContent="Getting your picture ready…";const c=await prepImg(f);
 const r=await Tesseract.recognize(c,"eng",{logger:m=>{if(m.status==="recognizing text")prg.textContent=`Reading your squares… ${Math.round(m.progress*100)}%`}});
 draft=parseOCR(r.data).map(t=>[t[0]||"",t[1]||"",t[2]||""]);const got=draft.flat().filter(Boolean).length;prg.textContent=`Found ${got} of 54 teams.`+(got<54?" Fix the red weeks below.":" Looks complete!");bindReview()}
 catch(e){prg.textContent="Couldn't read that picture (you need internet the first time). You can enter your teams by hand below.";draft=Array.from({length:18},()=>["","",""]);bindReview()}};
-const rs=document.getElementById("rst");if(rs)rs.onclick=()=>{if(!confirm("Switch back to Debbie's Squares? Your teams will be removed from this phone."))return;PROF=null;try{localStorage.removeItem("ds_prof")}catch(e){}POOL=ls(poolKey(),"DEBBIE");hl=ls(hlKey(),{});joinPool();loadHL();if(alertsOn)pushSubscribe();setTitle();closeWk();render()}};
+const rs=document.getElementById("rst");if(rs)rs.onclick=()=>{if(!confirm("Switch back to Debbie's Squares? Your teams will be removed from this phone."))return;PROF=null;try{localStorage.removeItem("ds_prof")}catch(e){}joinPool();if(alertsOn)pushSubscribe();setTitle();closeWk();render()}};
 // ---- Live data from ESPN ----
 let fails=0;
 async function loadWeek(i){try{const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2026&seasontype=2&week=${i+1}`,{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();if(!(j.events||[]).length)return;const old=all[i]||{};const d={};
