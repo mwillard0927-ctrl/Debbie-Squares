@@ -38,7 +38,10 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 #modal button{font-size:15px;padding:8px 14px;border-radius:8px;border:none;margin-left:6px}
 .btns{text-align:right}.ok{background:var(--accent);color:#fff}.cx{background:var(--gray);color:var(--ink)}
 @media (max-width:400px){.tg{font-size:10.5px;column-gap:5px}.wk{padding:6px 3px}}
-#ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 14px) 12px calc(env(safe-area-inset-bottom,0px) + 14px);z-index:5}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 56px) 22px calc(env(safe-area-inset-bottom,0px) + 40px);z-index:5}
+#ovx{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:14px;width:44px;height:44px;border-radius:50%;border:2px solid #fff;background:#000;color:#fff;font:700 22px/1 -apple-system,system-ui,sans-serif;z-index:6;display:none;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#ov.on~#ovx,#ov.on #ovx{display:block}
+.closebar{display:block;width:100%;margin-top:14px;font:700 15px -apple-system,system-ui,sans-serif;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--gray);color:var(--ink)}
 #ov.on{display:flex;animation:fi .18s ease-out}
 @keyframes fi{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 #ov .card{background:var(--card);border:2px solid var(--line);border-radius:12px;width:100%;max-width:520px;max-height:100%;overflow:auto;padding:14px 12px}
@@ -112,7 +115,7 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <li><b>Tap any week</b> to open it full screen.</li>
 <li>You'll see each game: who your team played, both logos and records, the score, and whether it's final, live, or when it starts.</li>
 <li>Upcoming games show <b>How to watch</b>, based on your <b>📺 My TV</b> settings: the first line is how <b>you</b> can watch it; anything in <b style="color:#b26a00">orange</b> is a channel you may not have, with 2 ways to watch.</li>
-<li><b>Tap anywhere outside the box</b> to close it.</li></ul>
+<li>To close it, tap the <b>✕</b> in the top corner, the <b>Close</b> button at the bottom, your phone's <b>Back</b> button, or anywhere outside the box.</li></ul>
 <h4>Top of the screen</h4><ul>
 <li>The black bar shows your <b>next game</b>: the matchup, how long until kickoff, and the channel. When a game is on, it shows the live score instead.</li>
 <li><b>Season total</b> adds up all your points so far (for the Grand Prize), plus the projected points still to come. <b>Tap it</b> to see a chart of every week.</li></ul>
@@ -154,8 +157,8 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <h4>Put it on your home screen</h4><ul>
 <li><b>iPhone (Safari):</b> tap Share, then <b>Add to Home Screen</b>.</li>
 <li><b>Android (Chrome):</b> tap the ⋮ menu, then <b>Add to Home screen</b> / <b>Install app</b>.</li></ul>
-<div class="x">Tap outside to close</div></div>
-<div id="ov"><div class="card" id="ovc"></div></div>
+<button class="closebar">Close</button></div>
+<div id="ov"><button id="ovx" aria-label="Close">✕</button><div class="card" id="ovc"></div></div>
 <div id="modal"><div class="box"><div id="mtitle" style="font-weight:700"></div><input id="minp" type="number" inputmode="numeric"><div class="btns"><button class="cx" id="mcx">Skip</button><button class="ok" id="mok">Save</button></div></div></div>
 <script>
 // SNAPSHOT (updated weekly by the scheduled task) — keep on one line
@@ -216,7 +219,7 @@ function openTV(after){const P=tvPrefs()||{mkt:"",city:"",have:{}};openI=null;sh
 <label class="fld" id="tvcw" style="display:${P.mkt==="OTHER"?"block":"none"}"><span>Your city</span><input type="text" id="tvc" maxlength="40" value="${esc(P.city||"")}" placeholder="e.g. Grand Rapids"></label>
 <div class="fld"><span>What do you watch on? (check all you have)</span>${HAVE.map(([k,l])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0;font-size:15px"><input type="checkbox" data-k="${k}" style="width:22px;height:22px"${P.have&&P.have[k]?" checked":""}>${l}</label>`).join("")}</div>
 <p class="sub" style="text-align:left">No cable or streaming? A basic TV antenna gets CBS, FOX, NBC and ABC free — all prime-time network games and many Sunday games.</p>
-<button class="btn" id="tvs" style="width:100%">Save</button><div class="x">Tap outside to close</div>`);
+<button class="btn" id="tvs" style="width:100%">Save</button><button class="closebar">Close</button>`);
 const m=document.getElementById("tvm");m.onchange=()=>{document.getElementById("tvcw").style.display=m.value==="OTHER"?"block":"none"};
 document.getElementById("tvs").onclick=()=>{if(!m.value){alert("Please choose where you live.");return}const have={};ovc.querySelectorAll("input[data-k]").forEach(c=>{if(c.checked)have[c.dataset.k]=1});lsSet(tvKey(),{mkt:m.value,city:document.getElementById("tvc").value.trim(),have});closeWk();render();if(alertsOn)pushSubscribe();if(after)after()}}
 
@@ -232,7 +235,7 @@ rows.forEach((o,i)=>{const x=L+i*(bw+gap);if(o.w.tot)g+=`<rect x="${x}" y="${y(o
 if(o.r.high!=null)g+=`<line x1="${x-2}" x2="${x+bw+2}" y1="${y(o.r.high)}" y2="${y(o.r.high)}" stroke="#ff6b35" stroke-width="2.5"/>`;if(o.r.low!=null)g+=`<line x1="${x-2}" x2="${x+bw+2}" y1="${y(o.r.low)}" y2="${y(o.r.low)}" stroke="#1565c0" stroke-width="2.5"/>`;g+=`<text x="${x+bw/2}" y="${H+24}" text-anchor="middle">${i+1}</text>`});g+=`</svg>`;
 show(`<h2>Season</h2><div class="sub">${esc(PROF?PROF.name+"'s":"Debbie's")} points by week</div><div class="st2"><div><b>${T}</b>Season total</div><div><b>${P?"~"+(T+P):T}</b>Projected finish</div><div><b>${wins}</b>Weeks won</div></div>${g}
 <div class="lg"><span><i style="background:#1b7f3b"></i>Your total</span><span><i style="background:#1b7f3b;opacity:.3"></i>Projected</span><span><i style="background:#ff6b35"></i>Winning high</span><span><i style="background:#1565c0"></i>Winning low</span></div>
-${best>=0?`<p class="sub" style="margin-top:10px">Best week so far: Week ${bi+1} with ${best} points.</p>`:""}<p class="sub">Winning high/low lines show once you enter them (hold a finished week).</p><div class="x">Tap outside to close</div>`)};
+${best>=0?`<p class="sub" style="margin-top:10px">Best week so far: Week ${bi+1} with ${best} points.</p>`:""}<p class="sub">Winning high/low lines show once you enter them (hold a finished week).</p><button class="closebar">Close</button>`)};
 // ---- next game ----
 function nextGame(){const now=Date.now();let live=[],nx=null;W.forEach((_,i)=>{const d=wk(i);TEAMS(i).forEach(t=>{const x=d[t];if(!x||x.bye)return;if(x.state==="in")live.push({x,t});else if(x.state==="pre"&&x.date){const ms=new Date(x.date)-now;if(ms>-3*3600e3&&(!nx||new Date(x.date)<new Date(nx.x.date)))nx={x,t,i}}})});return{live,nx}}
 function cd(ms){if(ms<=0)return"starting now";const m=Math.round(ms/6e4),d=Math.floor(m/1440),h=Math.floor(m%1440/60),mm=m%60;return"in "+(d?d+"d "+h+"h":h?h+"h "+mm+"m":mm+"m")}
@@ -258,7 +261,7 @@ if(ios&&!standalone){if(ls("ds_onb_ios",false))return;lsSet("ds_onb_ios",true);o
 <div class="stp"><span class="n">3</span><div>Open <b>Squares</b> from your Home Screen. It will ask to turn on alerts.</div></div>
 <p class="sub" style="margin-top:10px">Needs iOS 16.4 or newer. You can still use the app here without alerts.</p>
 <div style="text-align:center;font-size:40px;margin-top:6px;animation:bob 1.2s ease-in-out infinite">⬇︎</div>
-<button class="btn alt" id="onx" style="width:100%">Got it</button><div class="x">Tap outside to close</div>`);document.getElementById("onx").onclick=closeWk;return}
+<button class="btn alt" id="onx" style="width:100%">Got it</button><button class="closebar">Close</button>`);document.getElementById("onx").onclick=closeWk;return}
 if(!("Notification"in window)||alertsOn||Notification.permission==="denied"||ls("ds_onb_alert",false))return;
 lsSet("ds_onb_alert",true);openI=null;show(`<h2>Turn on game alerts?</h2><div class="sub">Never miss a kickoff or a score</div>
 <div class="stp"><span class="n">🏈</span><div>A buzz when your team <b>kicks off</b>, <b>scores</b>, and when the game is <b>final</b>.</div></div>
@@ -280,10 +283,12 @@ if(p.s!=="post"&&x.state==="post")notify(`Final: ${N[t]} ${x.score}`,`${o} ${x.o
 function headsUp(force){const c=curWeek();const key="ds_hu_"+(PROF?PROF.name:"D")+"_"+c;if(!alertsOn||(!force&&ls(key,false)))return;const d=wk(c);const g=TEAMS(c).map(t=>{const x=d[t];if(!x)return null;if(x.bye)return`${N[t]}: BYE`;if(x.state!=="pre")return null;return`${N[t]} ${x.home?"vs":"@"} ${x.opp?x.opp.name:""} – ${x.date?new Date(x.date).toLocaleString([],{weekday:"short",hour:"numeric",minute:"2-digit"}):"TBA"}, ${tvShort(x,t)}`}).filter(Boolean);if(!g.length)return;notify(`Week ${c+1} heads-up`,g.join("\n"),"hu");lsSet(key,true)}
 let openI=null;
 const ov=document.getElementById("ov"),ovc=document.getElementById("ovc");
-function show(html){ovc.innerHTML=html;ov.classList.add("on");ovc.scrollTop=0}
-function openWk(i){openI=i;fillWk();ov.classList.add("on")}
-function closeWk(){openI=null;ov.classList.remove("on")}
-ov.addEventListener("click",e=>{if(e.target.id==="ov")closeWk()});
+function ovOpen(){if(!ov.classList.contains("on")){ov.classList.add("on");try{history.pushState({ov:1},"")}catch(e){}}}
+function show(html){ovc.innerHTML=html;ovOpen();ovc.scrollTop=0}
+function openWk(i){openI=i;fillWk();ovOpen();ovc.scrollTop=0}
+function closeWk(){openI=null;if(!ov.classList.contains("on"))return;ov.classList.remove("on");try{if(history.state&&history.state.ov)history.back()}catch(e){}}
+window.addEventListener("popstate",()=>{if(ov.classList.contains("on")){openI=null;ov.classList.remove("on")}});
+ov.addEventListener("click",e=>{if(e.target.id==="ov"||e.target.id==="ovx"||e.target.classList.contains("closebar"))closeWk()});
 ovc.addEventListener("click",e=>{if(e.target.classList.contains("tvset")){e.preventDefault();openTV()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeWk()});
 function fillWk(){const i=openI,lbl=W[i][0],teams=TEAMS(i),d=wk(i);let h=`<h2>Week ${i+1}</h2><div class="sub">${lbl}</div>`;let tot=0,any=false,proj=0,anyP=false;
@@ -298,7 +303,7 @@ if(o)meta=(x.home?"vs ":"@ ")+o.name+" · "+meta;
 h+=`<div class="gm${live?" lv":""}">${rows}<div class="meta${live?" live":""}">${meta}</div>${watch(x,t)}</div>`});
 if(any)h+=`<div class="wt">Total: ${tot}${anyP?` <span style="color:var(--mute);font-size:13px">+ ~${proj} still to play</span>`:""}</div>`;else if(anyP)h+=`<div class="wt" style="color:var(--mute)">Projected: ~${proj}</div>`;
 const r=hl[i];if(r&&(r.high!=null||r.low!=null))h+=`<div class="hl" style="text-align:center;font-size:13px">High <span class="h">${r.high??"–"}</span> · Low <span class="l">${r.low??"–"}</span></div>`;
-h+=`<div class="x">Tap outside to close</div>`;ovc.innerHTML=h}
+h+=`<button class="closebar">Close</button>`;ovc.innerHTML=h}
 // ---- Help ----
 document.getElementById("tvb").onclick=()=>openTV();
 document.getElementById("helpb").onclick=()=>{openI=null;show(document.getElementById("help").innerHTML)};
@@ -306,7 +311,7 @@ document.getElementById("helpb").onclick=()=>{openI=null;show(document.getElemen
 document.getElementById("shareb").onclick=()=>{openI=null;show(`<div class="big"><h2>Share this app</h2><div class="sub">Scan the code or send the link</div><img class="qr" src="qr.svg" alt="QR code for the app">
 <div class="cp"><input id="lnk" readonly value="${APP_URL}"><button class="btn" id="cpy">Copy</button></div>
 ${navigator.share?'<button class="btn blue" id="nsh" style="width:100%">Share…</button>':""}
-<p class="sub" style="margin-top:12px">Anyone can open it and add their own squares.</p><div class="x">Tap outside to close</div></div>`);
+<p class="sub" style="margin-top:12px">Anyone can open it and add their own squares.</p><button class="closebar">Close</button></div>`);
 const inp=document.getElementById("lnk");inp.onclick=()=>inp.select();
 document.getElementById("cpy").onclick=async e=>{try{await navigator.clipboard.writeText(APP_URL)}catch(_){inp.select();document.execCommand("copy")}e.target.textContent="Copied!";setTimeout(()=>e.target.textContent="Copy",1500)};
 const ns=document.getElementById("nsh");if(ns)ns.onclick=()=>navigator.share({title:"Squares",text:"NFL squares tracker — live scores & projections",url:APP_URL}).catch(()=>{})};
@@ -345,7 +350,7 @@ document.getElementById("addb").onclick=()=>{openI=null;draft=null;show(`<h2>Add
 <button class="btn blue" id="rdb" style="width:100%">Read my squares</button>
 <div class="prog" id="prg"></div><div id="rvw"></div>
 ${PROF?`<hr style="margin:16px 0;border:none;border-top:1px solid var(--line)"><button class="btn alt" id="rst" style="width:100%">Switch back to Debbie's Squares</button>`:""}
-<div class="x">Tap outside to close</div>`);
+<button class="closebar">Close</button>`);
 const prg=document.getElementById("prg"),rvw=document.getElementById("rvw");
 const bindReview=()=>{rvw.innerHTML=reviewHTML();rvw.querySelectorAll("select").forEach(s=>s.onchange=()=>{draft[s.dataset.w][s.dataset.k]=s.value;const c=s.closest(".c");c.classList.toggle("bad",draft[s.dataset.w].filter(Boolean).length<3)});
 document.getElementById("svb").onclick=()=>{const nm=document.getElementById("fname").value.trim();if(!nm){alert("Please type your name first.");document.getElementById("fname").focus();return}
