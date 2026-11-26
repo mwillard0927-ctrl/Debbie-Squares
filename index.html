@@ -228,6 +228,26 @@ let serverPush=ls("ds_spush",false);
 async function pushSubscribe(){if(!pushReady())return false;try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});const k=sub.toJSON().keys;
 await rpc("squares_subscribe",{p_endpoint:sub.endpoint,p_p256dh:k.p256dh,p_auth:k.auth,p_teams:W.map((_,i)=>TEAMS(i)),p_name:PROF?PROF.name:"Debbie"});serverPush=true;lsSet("ds_spush",true);return true}catch(e){serverPush=false;lsSet("ds_spush",false);return false}}
 async function pushUnsubscribe(){try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){await rpc("squares_unsubscribe",{p_endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe()}}catch(e){}serverPush=false;lsSet("ds_spush",false)}
+
+// ---- first-open prompts ----
+function onboard(){const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+if(ov.classList.contains("on"))return;
+if(ios&&!standalone){if(ls("ds_onb_ios",false))return;lsSet("ds_onb_ios",true);openI=null;show(`<h2>Get game alerts</h2><div class="sub">On iPhone, add the app to your Home Screen first</div>
+<div class="stp"><span class="n">1</span><div>Tap the <b>Share</b> button <span style="display:inline-block;border:2px solid #1565c0;border-radius:6px;padding:0 6px;color:#1565c0;font-weight:800">⬆︎</span> at the bottom of Safari.</div></div>
+<div class="stp"><span class="n">2</span><div>Scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</div></div>
+<div class="stp"><span class="n">3</span><div>Open <b>Squares</b> from your Home Screen. It will ask to turn on alerts.</div></div>
+<p class="sub" style="margin-top:10px">Needs iOS 16.4 or newer. You can still use the app here without alerts.</p>
+<div style="text-align:center;font-size:40px;margin-top:6px;animation:bob 1.2s ease-in-out infinite">⬇︎</div>
+<button class="btn alt" id="onx" style="width:100%">Got it</button><div class="x">Tap outside to close</div>`);document.getElementById("onx").onclick=closeWk;return}
+if(!("Notification"in window)||alertsOn||Notification.permission==="denied"||ls("ds_onb_alert",false))return;
+lsSet("ds_onb_alert",true);openI=null;show(`<h2>Turn on game alerts?</h2><div class="sub">Never miss a kickoff or a score</div>
+<div class="stp"><span class="n">🏈</span><div>A buzz when your team <b>kicks off</b>, <b>scores</b>, and when the game is <b>final</b>.</div></div>
+<div class="stp"><span class="n">📺</span><div>A <b>weekly heads-up</b> with your games, times and channels.</div></div>
+<div class="stp"><span class="n">🔒</span><div>Works even when the app is closed. Turn it off anytime with the 🔔 button.</div></div>
+<button class="btn" id="ony" style="width:100%;margin-top:8px">Yes, turn on alerts</button>
+<button class="btn alt" id="onn" style="width:100%;margin-top:8px">Not now</button>
+<p class="sub" style="margin-top:8px">Your phone will ask you to <b>Allow</b> — tap Allow.</p>`);
+document.getElementById("ony").onclick=()=>{closeWk();document.getElementById("alb").click()};document.getElementById("onn").onclick=closeWk}
 // ---- alerts ----
 let alertsOn=ls("ds_alerts",false)&&"Notification"in window&&Notification.permission==="granted";const prev={};let primed=false;
 function albUpd(){const b=document.getElementById("alb");b.textContent="🔔 Game alerts: "+(alertsOn?"On":"Off");b.classList.toggle("on",alertsOn)}
@@ -316,7 +336,7 @@ all[i]=d;cache[i]=d;fetched[i]=1;lsSet("ds_all",cache);lsSet("ds_fetched",fetche
 async function refreshAll(){fails=0;await Promise.all(W.map((_,i)=>loadWeek(i)));stamp();render();checkAlerts();headsUp()}
 async function refreshCur(){fails=0;const c=curWeek();await loadWeek(c);if(c>0&&Object.values(wk(c-1)).some(x=>x.state==="in"))await loadWeek(c-1);stamp();render();checkAlerts()}
 function stamp(){document.getElementById("upd").textContent=fails?"Offline — showing saved scores.":"Live scores updated "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
-setTitle();albUpd();render();refreshAll();if(alertsOn&&pushReady())pushSubscribe();setInterval(refreshCur,60000);
+setTitle();albUpd();render();refreshAll();if(alertsOn&&pushReady())pushSubscribe();setTimeout(onboard,1500);setInterval(refreshCur,60000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshCur()});
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
 </script></body></html>
