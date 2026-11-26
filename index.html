@@ -94,7 +94,40 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 .chart{width:100%;height:auto;margin-top:8px}.chart text{fill:var(--ink);font:10px -apple-system,system-ui,sans-serif}
 .lg{display:flex;gap:12px;justify-content:center;font-size:12px;margin-top:6px;flex-wrap:wrap}.lg i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:4px}
 .st2{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;text-align:center}.st2 div{border:1px solid var(--line);border-radius:8px;padding:6px 2px;font-size:11px;color:var(--mute)}.st2 b{display:block;font-size:18px;color:var(--ink)}
-</style></head><body>
+.ag{--yel:#ffd54a;--grn:#1b7f3b;--blu:#1565c0;--red:#c62828;font-family:Nunito,system-ui,sans-serif;font-size:17px;line-height:1.5}
+.ag .agh{border-radius:12px}
+.ag .agh{background:#000;color:#fff;text-align:center;padding:30px 16px 26px}
+.ag .ttl{font-family:Bungee,Impact,sans-serif;font-size:clamp(28px,7vw,44px);line-height:1.05;background:linear-gradient(90deg,#ffd54a,#ff6b35,#ff2d95,#7c4dff,#00e5ff);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0}
+.ag .agh p{margin:8px 0 0;font-size:17px;color:#ddd}
+.ag .pin{display:inline-flex;gap:6px;margin-top:14px;align-items:center;font-weight:800}
+.ag .pin b{display:inline-block;background:var(--yel);color:#000;font:22px Bungee,Impact,sans-serif;padding:4px 10px;border-radius:8px;letter-spacing:4px}
+.ag .agm{max-width:640px;margin:0 auto;padding:22px 16px 40px;display:grid;gap:18px}
+.ag .step{background:var(--card);border:2px solid var(--line);border-radius:16px;overflow:hidden}
+.ag .step .top{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:2px solid var(--line)}
+.ag .num{flex:none;width:44px;height:44px;border-radius:50%;background:#000;color:var(--yel);font:22px/44px Bungee,Impact,sans-serif;text-align:center;border:2px solid var(--yel)}
+.ag .step h2{margin:0;font-size:22px;line-height:1.15;font-weight:800}
+.ag .when{font-size:14px;color:var(--mute);font-weight:700}
+.ag .body{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;padding:16px;align-items:center}
+.ag .body svg{width:150px;height:auto;display:block}
+.ag ol{margin:0;padding-left:22px}
+.ag ol li{margin:4px 0}
+.ag .tip{margin:10px 0 0;font-size:15px;color:var(--mute)}
+.ag .tools{display:grid;gap:8px;padding:16px}
+.ag .tool{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border:1.5px solid var(--line);border-radius:12px}
+.ag .tool .ic{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font:800 20px Nunito,sans-serif;color:#fff}
+.ag .tool b{display:block;font-size:17px}
+.ag .tool span{font-size:15px;color:var(--mute)}
+.ag .know{background:#000;color:#fff;border-radius:16px;padding:18px}
+.ag .know h2{margin:0 0 8px;font:20px Bungee,Impact,sans-serif;color:var(--yel)}
+.ag .know ul{margin:0;padding-left:20px}
+.ag .know li{margin:6px 0}
+.ag .k{display:inline-block;background:var(--yel);color:#000;font-weight:800;padding:0 6px;border-radius:5px;white-space:nowrap}
+@keyframes press{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+.ag .finger{animation:press 1.6s ease-in-out infinite;transform-box:fill-box}
+@media(prefers-reduced-motion:reduce){.ag .finger{animation:none}}
+@media(max-width:520px){.ag .body{grid-template-columns:1fr;justify-items:center}.ag .body svg{width:170px}.ag .body>div{width:100%}}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"></head><body>
 <header><span class="ttl" id="ttl">Debbie's Squares</span></header>
 <div id="nxt">Loading next game…</div>
 <button id="ssn">Season total: –</button>
@@ -167,6 +200,47 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <li><b>iPhone (Safari):</b> tap Share, then <b>Add to Home Screen</b>.</li>
 <li><b>Android (Chrome):</b> tap the ⋮ menu, then <b>Add to Home screen</b> / <b>Install app</b>.</li></ul>
 <button class="closebar">Close</button></div>
+<div id="agt" style="display:none"><div class="ag">
+<div class="agh">
+  <h1 class="ttl">Admin Guide</h1>
+  <p>Debbie's Squares · just for you</p>
+  <div class="pin">Your PIN: <b>8744</b></div>
+  <p style="font-size:14px;color:#aaa">Keep it to yourself.</p>
+</div>
+<div class="agm">
+  <section class="step">
+    <div class="top"><div class="num">1</div><div><h2>Unlock admin mode</h2><div class="when">One time only</div></div></div>
+    <div class="body">
+      <svg viewBox="0 0 150 150" aria-hidden="true"><rect x="12" y="14" width="96" height="96" rx="8" fill="#fff8cc" stroke="#1a1a1a" stroke-width="3"/><text x="60" y="38" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="14" fill="#1a1a1a">Week 12</text><rect x="26" y="50" width="68" height="6" rx="3" fill="#bbb"/><rect x="26" y="64" width="56" height="6" rx="3" fill="#bbb"/><rect x="26" y="78" width="62" height="6" rx="3" fill="#bbb"/><circle cx="84" cy="84" r="20" fill="#ffd54a" opacity=".55"/><g class="finger"><path d="M84 84 l0 34 q0 14 14 14 l20 0 q12 0 12 -12 l0 -18 q0 -8 -8 -8 l-6 0 l0 -4 q0 -7 -7 -7 l-4 0 l0 -2 q0 -7 -7 -7 l-6 0 l0 -10 q0 -8 -8 -8 q-8 0 -8 8z" fill="#f3c9a8" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round"/></g></svg>
+      <div><ol><li><b>Press and hold</b> any finished week's square.</li><li>Type <span class="k">8744</span></li><li>Tap <b>Save</b>.</li></ol><p class="tip">Your phone remembers it. Typing it wrong 5 times locks it for 15 minutes.</p></div>
+    </div>
+  </section>
+  <section class="step">
+    <div class="top"><div class="num">2</div><div><h2>Post the winning numbers</h2><div class="when">Every week, after the games</div></div></div>
+    <div class="body">
+      <svg viewBox="0 0 150 150" aria-hidden="true"><rect x="10" y="10" width="130" height="130" rx="14" fill="none" stroke="#1a1a1a" stroke-width="3"/><text x="75" y="38" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="15" fill="#1b7f3b">HIGH</text><rect x="28" y="46" width="94" height="28" rx="6" fill="#fff" stroke="#1b7f3b" stroke-width="3"/><text x="75" y="67" text-anchor="middle" font-family="Bungee,Impact" font-size="18" fill="#1a1a1a">104</text><text x="75" y="96" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="15" fill="#1565c0">LOW</text><rect x="28" y="104" width="94" height="28" rx="6" fill="#fff" stroke="#1565c0" stroke-width="3"/><text x="75" y="125" text-anchor="middle" font-family="Bungee,Impact" font-size="18" fill="#1a1a1a">41</text></svg>
+      <div><ol><li><b>Press and hold</b> that week's square.</li><li>Type the <b style="color:var(--grn)">HIGH</b> → <b>Save</b>.</li><li>Type the <b style="color:var(--blu)">LOW</b> → <b>Save</b>.</li></ol><p class="tip">Everyone sees it in a couple of minutes and gets an alert. Wrong number? Just hold the square again.</p></div>
+    </div>
+  </section>
+  <section class="step">
+    <div class="top"><div class="num">3</div><div><h2>Admin tools</h2><div class="when">🏆 Leaderboard → 🔑 Admin tools (bottom)</div></div></div>
+    <div class="tools">
+      <div class="tool"><div class="ic" style="background:var(--grn)">#</div><div><b>Fix many weeks at once</b><span>Change the High / Low boxes → Save</span></div></div>
+      <div class="tool"><div class="ic" style="background:#6b6b6b">✕</div><div><b>Clear a week</b><span>Empty its boxes → Save</span></div></div>
+      <div class="tool"><div class="ic" style="background:var(--red)">−</div><div><b>Remove a name</b><span>Tap Remove next to it on the list</span></div></div>
+      <div class="tool"><div class="ic" style="background:#000;color:var(--yel);font-size:13px">PIN</div><div><b>Change your PIN</b><span>4–8 digits → Change PIN. Write it down!</span></div></div>
+    </div>
+  </section>
+  <section class="know">
+    <h2>Good to know</h2>
+    <ul>
+      <li>Only you can post or change the numbers. Everyone else just sees them.</li>
+      <li>Offline? Your phone saves them and sends them later.</li>
+      <li>New phone? Do step 1 again.</li>
+    </ul>
+  </section>
+</div>
+</div></div>
 <div id="ov"><button id="ovx" aria-label="Close">✕</button><div class="card" id="ovc"></div></div>
 <div id="modal"><div class="box"><div id="mtitle" style="font-weight:700"></div><input id="minp" type="number" inputmode="numeric"><div class="btns"><button class="cx" id="mcx">Skip</button><button class="ok" id="mok">Save</button></div></div></div>
 <script>
@@ -343,6 +417,9 @@ const by={};mem.forEach(m=>{if(!by[m.name]||m.updated_at>by[m.name].updated_at)b
 if(!M.length){ovc.innerHTML=`<h2>Other scorecards</h2><p class="sub">No one else has added their squares yet. Share the app and they'll show up here once they add theirs.</p><button class="closebar">Close</button>`;return}
 ovc.innerHTML=`<h2>Other scorecards</h2><div class="sub">Tap a name to see their squares live</div>`+M.map((m,k)=>{const r=totFor(cw,m.teams&&m.teams[cw]);const live=(m.teams&&m.teams[cw]||[]).some(t=>all[cw]&&all[cw][t]&&all[cw][t].state==="in");return`<button class="gm" data-o="${k}" style="display:flex;width:100%;justify-content:space-between;align-items:center;background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer"><span><b style="font-size:16px">${esc(m.name)}</b><br><span class="st">Week ${cw+1}: ${(m.teams&&m.teams[cw]||[]).map(t=>N[t]||t).join(", ")||"—"}</span></span><span style="text-align:right;font-weight:800;font-size:18px">${r.tot}${live?' <span class="lvb">LIVE</span>':""}${r.proj?`<br><span class="st">+ ~${r.proj}</span>`:""}</span></button>`}).join("")+`<button class="closebar">Close</button>`;
 ovc.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{otherView=M[+b.dataset.o];fillOther();ovc.scrollTop=0})}
+
+// ---- hidden admin guide: tap the title 6 times quickly ----
+{let taps=[];document.querySelector("header").addEventListener("click",()=>{const n=Date.now();taps=taps.filter(t=>n-t<2500);taps.push(n);if(taps.length>=6){taps=[];openI=null;show(document.getElementById("agt").innerHTML+'<button class="closebar">Close</button>')}})}
 // ---- on-pace tracker ----
 function typical(){const H=[],L=[];Object.keys(hl).forEach(k=>{const v=hl[k];if(v&&v.high!=null)H.push(v.high);if(v&&v.low!=null)L.push(v.low)});const av=a=>a.length?Math.round(a.reduce((p,q)=>p+q,0)/a.length):null;return{H:av(H),L:av(L),n:Math.max(H.length,L.length)}}
 function paceHTML(i,big){const r=weekTotals(i);if(r.done||(!r.any&&!r.anyP))return"";const fin=r.tot+r.proj;const T=typical();if(T.H==null&&T.L==null)return big?`<div class="vs n" style="text-align:center;font-size:13px">On pace for ~${fin}</div>`:"";
