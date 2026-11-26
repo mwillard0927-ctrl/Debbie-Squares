@@ -137,7 +137,7 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <li>After a week is over, <b>press and hold</b> its square for about half a second.</li>
 <li>Type the winning <b>HIGH</b> score and tap <b>Save</b>, then the winning <b>LOW</b> score and tap <b>Save</b>.</li>
 <li>Tap <b>Skip</b> to leave one unchanged. Hold the square again any time to fix a number.</li>
-<li>These are saved on this phone only.</li>
+<li>They're <b>shared</b>: whoever enters them first, everyone using the app sees them, and anyone can fix a wrong number the same way.</li>
 <li>Once entered, the square shows how close you came, like <b style="color:var(--accent)">"🏆 Won the low!"</b> or "8 from the low".</li>
 <li>The season chart (tap <b>Season total</b>) shows every week's total next to the winning high and low.</li></ul>
 <h4>Add your own squares (different sheet?)</h4>
@@ -174,8 +174,8 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function esc(t){return String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let PROF=ls("ds_prof",null);
 const TEAMS=i=>PROF?(PROF.teams[i]||[]):W[i][1];
-const hlKey=()=>PROF?"ds_hl_"+PROF.name:"ds_hl";
-let hl=ls(hlKey(),{});
+const hlKey=()=>"ds_hl_shared";
+let hl=Object.assign({},ls("ds_hl",{}),ls(hlKey(),{}));
 // all[i] = {ABBR: entry} for every team ESPN returned that week
 const all={};const fetched=ls("ds_fetched",{});
 Object.keys(SNAP).forEach(k=>{all[+k.slice(1)-1]=Object.assign({},SNAP[k])});
@@ -188,7 +188,7 @@ function render(){const g=document.getElementById("grid");g.innerHTML="";const c
 function tap(el,i){el.addEventListener("click",()=>{if(el._held){el._held=false;return}openWk(i)})}
 function press(el,i){let t;const start=()=>{el._held=false;t=setTimeout(()=>{el._held=true;if(navigator.vibrate)navigator.vibrate(30);ask(i)},550)};const stop=()=>clearTimeout(t);el.addEventListener("touchstart",start,{passive:true});el.addEventListener("touchend",stop);el.addEventListener("touchmove",stop);el.addEventListener("mousedown",start);el.addEventListener("mouseup",stop);el.addEventListener("mouseleave",stop);el.addEventListener("contextmenu",e=>e.preventDefault())}
 function dialog(title,val){return new Promise(res=>{const m=document.getElementById("modal"),inp=document.getElementById("minp");document.getElementById("mtitle").textContent=title;inp.value=val??"";m.style.display="flex";setTimeout(()=>inp.focus(),50);const ok=document.getElementById("mok"),cx=document.getElementById("mcx");const done=v=>{m.style.display="none";ok.onclick=cx.onclick=null;res(v)};ok.onclick=()=>done(inp.value===""?null:+inp.value);cx.onclick=()=>done(undefined)})}
-async function ask(i){const cur=hl[i]||{};const h=await dialog(`Week ${i+1}: winning HIGH score`,cur.high);const l=await dialog(`Week ${i+1}: winning LOW score`,cur.low);hl[i]={high:h===undefined?cur.high??null:h,low:l===undefined?cur.low??null:l};lsSet(hlKey(),hl);render()}
+async function ask(i){const cur=hl[i]||{};const h=await dialog(`Week ${i+1}: winning HIGH score`,cur.high);const l=await dialog(`Week ${i+1}: winning LOW score`,cur.low);hl[i]={high:h===undefined?cur.high??null:h,low:l===undefined?cur.low??null:l};lsSet(hlKey(),hl);render();saveHL(i)}
 const MKT={DET:{n:"Detroit",t:["DET"],ch:{CBS:"WWJ CBS 62",FOX:"WJBK FOX 2",NBC:"WDIV NBC 4",ABC:"WXYZ ABC 7"}},PHX:{n:"Phoenix",t:["ARI"]},ATL:{n:"Atlanta",t:["ATL"]},BAL:{n:"Baltimore",t:["BAL"]},BUF:{n:"Buffalo",t:["BUF"]},CLT:{n:"Charlotte",t:["CAR"]},CHI:{n:"Chicago",t:["CHI"]},CIN:{n:"Cincinnati",t:["CIN"]},CLE:{n:"Cleveland",t:["CLE"]},DAL:{n:"Dallas–Fort Worth",t:["DAL"]},DEN:{n:"Denver",t:["DEN"]},GB:{n:"Green Bay",t:["GB"]},MIL:{n:"Milwaukee",t:["GB"]},HOU:{n:"Houston",t:["HOU"]},IND:{n:"Indianapolis",t:["IND"]},JAX:{n:"Jacksonville",t:["JAX"]},KC:{n:"Kansas City",t:["KC"]},LV:{n:"Las Vegas",t:["LV"]},LA:{n:"Los Angeles",t:["LAR","LAC"]},MIA:{n:"Miami",t:["MIA"]},MIN:{n:"Minneapolis",t:["MIN"]},BOS:{n:"Boston",t:["NE"]},NO:{n:"New Orleans",t:["NO"]},NY:{n:"New York",t:["NYG","NYJ"]},PHI:{n:"Philadelphia",t:["PHI"]},PIT:{n:"Pittsburgh",t:["PIT"]},SF:{n:"San Francisco Bay Area",t:["SF"]},SEA:{n:"Seattle",t:["SEA"]},TB:{n:"Tampa Bay",t:["TB"]},NSH:{n:"Nashville",t:["TEN"]},DC:{n:"Washington DC",t:["WSH"]},OTHER:{n:"Somewhere else",t:[]}};
 const HAVE=[["ant","Antenna / free local channels (CBS, FOX, NBC, ABC)"],["cable","Cable or satellite TV"],["live","Live TV streaming (YouTube TV, Hulu + Live TV, Sling, Fubo)"],["prime","Amazon Prime Video"],["netflix","Netflix"],["peacock","Peacock"],["espn","ESPN app / ESPN streaming"],["paramount","Paramount+"],["nflplus","NFL+ app"],["st","NFL Sunday Ticket (YouTube)"]];
 const tvKey=()=>PROF?"ds_tv_"+PROF.name:"ds_tv";
@@ -271,6 +271,11 @@ lsSet("ds_onb_alert",true);openI=null;show(`<h2>Turn on game alerts?</h2><div cl
 <button class="btn alt" id="onn" style="width:100%;margin-top:8px">Not now</button>
 <p class="sub" style="margin-top:8px">Your phone will ask you to <b>Allow</b> — tap Allow.</p>`);
 document.getElementById("ony").onclick=()=>{closeWk();document.getElementById("alb").click()};document.getElementById("onn").onclick=closeWk}
+
+// ---- shared weekly high/low (Supabase) ----
+async function loadHL(){if(!SUPA_URL.startsWith("https://"))return;try{const r=await fetch(`${SUPA_URL}/rest/v1/squares_weekly?select=week,high,low`,{headers:{apikey:SUPA_ANON},cache:"no-store"});if(!r.ok)return;const rows=await r.json();let ch=false;rows.forEach(x=>{const i=x.week-1;const o=hl[i]||{};if(o.high!==x.high||o.low!==x.low){hl[i]={high:x.high,low:x.low};ch=true}});if(ch){lsSet(hlKey(),hl);render()}
+const pend=ls("ds_hl_pend",[]);if(pend.length){lsSet("ds_hl_pend",[]);pend.forEach(i=>saveHL(i))}}catch(e){}}
+async function saveHL(i){const v=hl[i]||{};try{await rpc("squares_set_week",{p_week:i+1,p_high:v.high??null,p_low:v.low??null,p_by:PROF?PROF.name:"Debbie"})}catch(e){const p=ls("ds_hl_pend",[]);if(!p.includes(i)){p.push(i);lsSet("ds_hl_pend",p)}}}
 // ---- alerts ----
 let alertsOn=ls("ds_alerts",false)&&"Notification"in window&&Notification.permission==="granted";const prev={};let primed=false;
 function albUpd(){const b=document.getElementById("alb");b.textContent="🔔 Game alerts: "+(alertsOn?"On":"Off");b.classList.toggle("on",alertsOn)}
@@ -302,7 +307,7 @@ let meta=live?x.detail:pre?(x.date?new Date(x.date).toLocaleString([],{weekday:"
 if(o)meta=(x.home?"vs ":"@ ")+o.name+" · "+meta;
 h+=`<div class="gm${live?" lv":""}">${rows}<div class="meta${live?" live":""}">${meta}</div>${watch(x,t)}</div>`});
 if(any)h+=`<div class="wt">Total: ${tot}${anyP?` <span style="color:var(--mute);font-size:13px">+ ~${proj} still to play</span>`:""}</div>`;else if(anyP)h+=`<div class="wt" style="color:var(--mute)">Projected: ~${proj}</div>`;
-const r=hl[i];if(r&&(r.high!=null||r.low!=null))h+=`<div class="hl" style="text-align:center;font-size:13px">High <span class="h">${r.high??"–"}</span> · Low <span class="l">${r.low??"–"}</span></div>`;
+const r=hl[i];if(r&&(r.high!=null||r.low!=null)){h+=`<div class="hl" style="text-align:center;font-size:13px">Winning High <span class="h">${r.high??"–"}</span> · Winning Low <span class="l">${r.low??"–"}</span></div>`;if(any&&!anyP){const parts=[];if(r.high!=null)parts.push(tot>=r.high?"🏆 Won the high!":`${r.high-tot} points short of the high`);if(r.low!=null)parts.push(tot<=r.low?"🏆 Won the low!":`${tot-r.low} points above the low`);h+=`<div class="vs" style="text-align:center;font-size:14px;margin-top:4px">${parts.join(" · ")}</div>`}}
 h+=`<button class="closebar">Close</button>`;ovc.innerHTML=h}
 // ---- Help ----
 document.getElementById("tvb").onclick=()=>openTV();
@@ -355,13 +360,13 @@ const prg=document.getElementById("prg"),rvw=document.getElementById("rvw");
 const bindReview=()=>{rvw.innerHTML=reviewHTML();rvw.querySelectorAll("select").forEach(s=>s.onchange=()=>{draft[s.dataset.w][s.dataset.k]=s.value;const c=s.closest(".c");c.classList.toggle("bad",draft[s.dataset.w].filter(Boolean).length<3)});
 document.getElementById("svb").onclick=()=>{const nm=document.getElementById("fname").value.trim();if(!nm){alert("Please type your name first.");document.getElementById("fname").focus();return}
 const miss=draft.map((t,i)=>t.filter(Boolean).length<3?i+1:0).filter(Boolean);if(miss.length&&!confirm(`Weeks ${miss.join(", ")} have fewer than 3 teams. Save anyway?`))return;
-PROF={name:nm,teams:draft.map(t=>t.filter(Boolean))};lsSet("ds_prof",PROF);if(alertsOn)pushSubscribe();hl=ls(hlKey(),{});setTitle();closeWk();render();refreshAll();setTimeout(()=>openTV(),300)}};
+PROF={name:nm,teams:draft.map(t=>t.filter(Boolean))};lsSet("ds_prof",PROF);if(alertsOn)pushSubscribe();setTitle();closeWk();render();refreshAll();setTimeout(()=>openTV(),300)}};
 document.getElementById("rdb").onclick=async()=>{const f=document.getElementById("fimg").files[0];if(!f){alert("Choose your screenshot first.");return}
 try{prg.textContent="Loading the reader (first time takes a moment)…";await loadTess();prg.textContent="Getting your picture ready…";const c=await prepImg(f);
 const r=await Tesseract.recognize(c,"eng",{logger:m=>{if(m.status==="recognizing text")prg.textContent=`Reading your squares… ${Math.round(m.progress*100)}%`}});
 draft=parseOCR(r.data).map(t=>[t[0]||"",t[1]||"",t[2]||""]);const got=draft.flat().filter(Boolean).length;prg.textContent=`Found ${got} of 54 teams.`+(got<54?" Fix the red weeks below.":" Looks complete!");bindReview()}
 catch(e){prg.textContent="Couldn't read that picture (you need internet the first time). You can enter your teams by hand below.";draft=Array.from({length:18},()=>["","",""]);bindReview()}};
-const rs=document.getElementById("rst");if(rs)rs.onclick=()=>{if(!confirm("Switch back to Debbie's Squares? Your teams will be removed from this phone."))return;PROF=null;try{localStorage.removeItem("ds_prof")}catch(e){}if(alertsOn)pushSubscribe();hl=ls(hlKey(),{});setTitle();closeWk();render()}};
+const rs=document.getElementById("rst");if(rs)rs.onclick=()=>{if(!confirm("Switch back to Debbie's Squares? Your teams will be removed from this phone."))return;PROF=null;try{localStorage.removeItem("ds_prof")}catch(e){}if(alertsOn)pushSubscribe();setTitle();closeWk();render()}};
 // ---- Live data from ESPN ----
 let fails=0;
 async function loadWeek(i){try{const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2026&seasontype=2&week=${i+1}`,{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();if(!(j.events||[]).length)return;const old=all[i]||{};const d={};
@@ -372,8 +377,8 @@ all[i]=d;cache[i]=d;fetched[i]=1;lsSet("ds_all",cache);lsSet("ds_fetched",fetche
 async function refreshAll(){fails=0;await Promise.all(W.map((_,i)=>loadWeek(i)));stamp();render();checkAlerts();headsUp()}
 async function refreshCur(){fails=0;const c=curWeek();await loadWeek(c);if(c>0&&Object.values(wk(c-1)).some(x=>x.state==="in"))await loadWeek(c-1);stamp();render();checkAlerts()}
 function stamp(){document.getElementById("upd").textContent=fails?"Offline — showing saved scores.":"Live scores updated "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
-setTitle();albUpd();render();refreshAll();if(alertsOn&&pushReady())pushSubscribe();setTimeout(onboard,1500);setInterval(refreshCur,60000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshCur()});
+setTitle();albUpd();render();refreshAll();loadHL();setInterval(loadHL,120000);if(alertsOn&&pushReady())pushSubscribe();setTimeout(onboard,1500);setInterval(refreshCur,60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){refreshCur();loadHL()}});
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
 </script></body></html>
 
