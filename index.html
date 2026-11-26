@@ -34,11 +34,30 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 #modal button{font-size:15px;padding:8px 14px;border-radius:8px;border:none;margin-left:6px}
 .btns{text-align:right}.ok{background:var(--accent);color:#fff}.cx{background:var(--gray);color:var(--ink)}
 @media (max-width:400px){.tg{font-size:10.5px;column-gap:5px}.wk{padding:6px 3px}}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 14px) 12px calc(env(safe-area-inset-bottom,0px) + 14px);z-index:5}
+#ov.on{display:flex;animation:fi .18s ease-out}
+@keyframes fi{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+#ov .card{background:var(--card);border:2px solid var(--line);border-radius:12px;width:100%;max-width:520px;max-height:100%;overflow:auto;padding:14px 12px}
+#ov h2{margin:0;text-align:center;font-family:'Bungee',Impact,sans-serif;font-size:22px}
+#ov .sub{text-align:center;color:var(--mute);font-size:12px;margin:2px 0 12px}
+.gm{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
+.gm.lv{border-color:var(--live)}
+.gm .row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:16px}
+.gm .row img{width:28px;height:28px}
+.gm .row .nm{flex:1}.gm .row .sc{font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+.gm .row.mine .nm{font-weight:700}
+.gm .row.dim{color:var(--mute)}
+.gm .meta{font-size:12px;color:var(--mute);text-align:center;margin-top:4px}
+.gm .meta.live{color:var(--live);font-weight:700}
+#ov .wt{text-align:center;font-weight:700;font-size:17px;border-top:1px solid var(--line);padding-top:8px}
+#ov .x{text-align:center;color:var(--mute);font-size:11px;margin-top:10px}
+.wk{cursor:pointer}
 </style></head><body>
 <header><span class="ttl" id="ttl">Debbie's Squares</span></header>
 <div class="grid" id="grid"></div>
 <p class="hint" id="hint">Hold a finished week's square to enter the winning high &amp; low scores.</p>
 <p class="hint" id="upd"></p>
+<div id="ov"><div class="card" id="ovc"></div></div>
 <div id="modal"><div class="box"><div id="mtitle" style="font-weight:700"></div><input id="minp" type="number" inputmode="numeric"><div class="btns"><button class="cx" id="mcx">Skip</button><button class="ok" id="mok">Save</button></div></div></div>
 <script>
 // SNAPSHOT (updated weekly by the scheduled task) — keep on one line
@@ -53,12 +72,32 @@ const data={};const hl=ls("ds_hl",{});
 Object.keys(SNAP).forEach(k=>data[+k.slice(1)-1]=SNAP[k]);
 const cache=ls("ds_cache",{});Object.keys(cache).forEach(k=>{data[k]=cache[k]});
 function status(w){const now=new Date();const[s,e]=rng(W[w][0]);if(now>new Date(e.getTime()+6*3600e3))return"past";if(now>=s)return"cur";return"up"}
-function render(){const g=document.getElementById("grid");g.innerHTML="";W.forEach(([lbl,teams],i)=>{const st=status(i);const d=data[i]||{};const el=document.createElement("div");el.className="wk"+(st==="cur"?" cur":"");let h=`<h3>Week ${i+1}</h3><div class="tg">`;let tot=0,any=false,proj=0,anyP=false;teams.forEach(t=>{const x=d[t];let v="",s="",cls="";if(x){if(x.bye){v="BYE"}else if(x.state==="pre"){if(x.proj!=null){v="~"+x.proj;proj+=x.proj;anyP=true;s="proj"}else{v="–";s="no line yet"}}else{v=x.score;tot+=x.score;any=true;s=x.state==="in"?x.detail:"Final";cls=x.state==="in"?" live":""}}h+=`<div class="n">${N[t]}</div><div class="s">${v}`+(s?`<div class="st${cls}">${s}</div>`:"")+`</div>`});h+=`</div>`;if(any)h+=`<div class="tot">Total: ${tot}</div>`;else if(anyP)h+=`<div class="tot proj">Projected: ~${proj}</div>`;else if(st!=="up"&&!data[i])h+=`<div class="tot proj">scores coming</div>`;const r=hl[i];if(st==="past"&&r&&(r.high!=null||r.low!=null))h+=`<div class="hl">High <span class="h">${r.high??"–"}</span> · Low <span class="l">${r.low??"–"}</span></div>`;el.innerHTML=h;if(st==="past")press(el,i);g.appendChild(el)})}
-function press(el,i){let t;const start=()=>{t=setTimeout(()=>{if(navigator.vibrate)navigator.vibrate(30);ask(i)},550)};const stop=()=>clearTimeout(t);el.addEventListener("touchstart",start,{passive:true});el.addEventListener("touchend",stop);el.addEventListener("touchmove",stop);el.addEventListener("mousedown",start);el.addEventListener("mouseup",stop);el.addEventListener("mouseleave",stop);el.addEventListener("contextmenu",e=>e.preventDefault())}
+function render(){const g=document.getElementById("grid");g.innerHTML="";W.forEach(([lbl,teams],i)=>{const st=status(i);const d=data[i]||{};const el=document.createElement("div");el.className="wk"+(st==="cur"?" cur":"");let h=`<h3>Week ${i+1}</h3><div class="tg">`;let tot=0,any=false,proj=0,anyP=false;teams.forEach(t=>{const x=d[t];let v="",s="",cls="";if(x){if(x.bye){v="BYE"}else if(x.state==="pre"){if(x.proj!=null){v="~"+x.proj;proj+=x.proj;anyP=true;s="proj"}else{v="–";s="no line yet"}}else{v=x.score;tot+=x.score;any=true;s=x.state==="in"?x.detail:"Final";cls=x.state==="in"?" live":""}}h+=`<div class="n">${N[t]}</div><div class="s">${v}`+(s?`<div class="st${cls}">${s}</div>`:"")+`</div>`});h+=`</div>`;if(any)h+=`<div class="tot">Total: ${tot}</div>`;else if(anyP)h+=`<div class="tot proj">Projected: ~${proj}</div>`;else if(st!=="up"&&!data[i])h+=`<div class="tot proj">scores coming</div>`;const r=hl[i];if(st==="past"&&r&&(r.high!=null||r.low!=null))h+=`<div class="hl">High <span class="h">${r.high??"–"}</span> · Low <span class="l">${r.low??"–"}</span></div>`;el.innerHTML=h;if(st==="past")press(el,i);tap(el,i);g.appendChild(el)});if(openI!=null)fillWk()}
+function tap(el,i){el.addEventListener("click",()=>{if(el._held){el._held=false;return}openWk(i)})}
+function press(el,i){let t;const start=()=>{el._held=false;t=setTimeout(()=>{el._held=true;if(navigator.vibrate)navigator.vibrate(30);ask(i)},550)};const stop=()=>clearTimeout(t);el.addEventListener("touchstart",start,{passive:true});el.addEventListener("touchend",stop);el.addEventListener("touchmove",stop);el.addEventListener("mousedown",start);el.addEventListener("mouseup",stop);el.addEventListener("mouseleave",stop);el.addEventListener("contextmenu",e=>e.preventDefault())}
 function dialog(title,val){return new Promise(res=>{const m=document.getElementById("modal"),inp=document.getElementById("minp");document.getElementById("mtitle").textContent=title;inp.value=val??"";m.style.display="flex";setTimeout(()=>inp.focus(),50);const ok=document.getElementById("mok"),cx=document.getElementById("mcx");const done=v=>{m.style.display="none";ok.onclick=cx.onclick=null;res(v)};ok.onclick=()=>done(inp.value===""?null:+inp.value);cx.onclick=()=>done(undefined)})}
 async function ask(i){const cur=hl[i]||{};const h=await dialog(`Week ${i+1}: winning HIGH score`,cur.high);const l=await dialog(`Week ${i+1}: winning LOW score`,cur.low);hl[i]={high:h===undefined?cur.high??null:h,low:l===undefined?cur.low??null:l};lsSet("ds_hl",hl);render()}
+
+let openI=null;
+function openWk(i){openI=i;fillWk();document.getElementById("ov").classList.add("on")}
+function closeWk(){openI=null;document.getElementById("ov").classList.remove("on")}
+document.getElementById("ov").addEventListener("click",e=>{if(e.target.id==="ov")closeWk()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeWk()});
+function fillWk(){const i=openI,[lbl,teams]=W[i],d=data[i]||{};let h=`<h2>Week ${i+1}</h2><div class="sub">${lbl}</div>`;let tot=0,any=false,proj=0,anyP=false;
+teams.forEach(t=>{const x=d[t];if(!x){h+=`<div class="gm"><div class="row mine"><span class="nm">${N[t]}</span></div><div class="meta">Game info loading…</div></div>`;return}
+if(x.bye){h+=`<div class="gm"><div class="row mine"><span class="nm">${N[t]}</span><span class="sc">BYE</span></div><div class="meta">No game this week</div></div>`;return}
+const o=x.opp,pre=x.state==="pre",live=x.state==="in";if(pre){if(x.proj!=null){proj+=x.proj;anyP=true}}else{tot+=x.score;any=true}
+const me=`<div class="row mine">${x.logo?`<img src="${x.logo}" alt="">`:""}<span class="nm">${N[t]}${x.rec?` <span class="st">(${x.rec})</span>`:""}</span><span class="sc">${pre?(x.proj!=null?"~"+x.proj:"–"):x.score}</span></div>`;
+const win=!pre&&o&&x.state==="post";const them=o?`<div class="row${win&&o.score<x.score?" dim":""}">${o.logo?`<img src="${o.logo}" alt="">`:""}<span class="nm">${o.name}${o.rec?` <span class="st">(${o.rec})</span>`:""}</span><span class="sc">${pre?"":o.score}</span></div>`:`<div class="meta">Opponent loading…</div>`;
+const rows=x.home?them+me:me+them;
+let meta=live?x.detail:pre?(x.date?new Date(x.date).toLocaleString([],{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"")+(x.proj!=null?" · projected":""):"Final";
+if(o)meta=(x.home?"vs ":"@ ")+o.name+" · "+meta;
+h+=`<div class="gm${live?" lv":""}">${rows}<div class="meta${live?" live":""}">${meta}</div></div>`});
+if(any)h+=`<div class="wt">Total: ${tot}</div>`;else if(anyP)h+=`<div class="wt" style="color:var(--mute)">Projected: ~${proj}</div>`;
+const r=hl[i];if(r&&(r.high!=null||r.low!=null))h+=`<div class="hl" style="text-align:center;font-size:13px">High <span class="h">${r.high??"–"}</span> · Low <span class="l">${r.low??"–"}</span></div>`;
+h+=`<div class="x">Tap outside to close</div>`;document.getElementById("ovc").innerHTML=h}
 let fails=0;
-async function loadWeek(i){const teams=W[i][1];try{const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2026&seasontype=2&week=${i+1}`,{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();if(!(j.events||[]).length)return;const old=data[i]||{};const d={};j.events.forEach(ev=>{const c=ev.competitions[0];const st=c.status.type;const odds=(c.odds||[])[0];c.competitors.forEach(cp=>{const ab=cp.team.abbreviation==="WAS"?"WSH":cp.team.abbreviation;if(!teams.includes(ab))return;let proj=null;if(odds&&odds.overUnder!=null){const ou=+odds.overUnder;const fav=odds.homeTeamOdds?.favorite?"home":odds.awayTeamOdds?.favorite?"away":null;const spr=Math.abs(+odds.spread||0);proj=Math.round((ou+(fav?(fav===cp.homeAway?1:-1)*spr:0))/2)}if(proj==null&&old[ab]&&old[ab].proj!=null)proj=old[ab].proj;d[ab]={score:+cp.score||0,state:st.state,detail:st.shortDetail,proj}})});teams.forEach(t=>{if(!d[t])d[t]={bye:true}});data[i]=d;cache[i]=d;lsSet("ds_cache",cache)}catch(e){fails++}}
+async function loadWeek(i){const teams=W[i][1];try{const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2026&seasontype=2&week=${i+1}`,{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();if(!(j.events||[]).length)return;const old=data[i]||{};const d={};j.events.forEach(ev=>{const c=ev.competitions[0];const st=c.status.type;const odds=(c.odds||[])[0];c.competitors.forEach(cp=>{const ab=cp.team.abbreviation==="WAS"?"WSH":cp.team.abbreviation;if(!teams.includes(ab))return;let proj=null;if(odds&&odds.overUnder!=null){const ou=+odds.overUnder;const fav=odds.homeTeamOdds?.favorite?"home":odds.awayTeamOdds?.favorite?"away":null;const spr=Math.abs(+odds.spread||0);proj=Math.round((ou+(fav?(fav===cp.homeAway?1:-1)*spr:0))/2)}if(proj==null&&old[ab]&&old[ab].proj!=null)proj=old[ab].proj;const op=c.competitors.find(o=>o!==cp);d[ab]={score:+cp.score||0,state:st.state,detail:st.shortDetail,proj,home:cp.homeAway==="home",date:ev.date,name:cp.team.shortDisplayName,logo:cp.team.logo,rec:(cp.records||[])[0]?.summary,opp:op?{ab:op.team.abbreviation,name:op.team.shortDisplayName,logo:op.team.logo,score:+op.score||0,rec:(op.records||[])[0]?.summary}:null}})});teams.forEach(t=>{if(!d[t])d[t]={bye:true}});data[i]=d;cache[i]=d;lsSet("ds_cache",cache)}catch(e){fails++}}
 function curWeek(){for(let i=0;i<W.length;i++){if(status(i)!=="past")return i}return W.length-1}
 async function refreshAll(){fails=0;await Promise.all(W.map((_,i)=>loadWeek(i)));stamp();render()}
 async function refreshCur(){fails=0;const c=curWeek();await loadWeek(c);if(c>0&&status(c-1)==="past"&&(data[c-1]&&Object.values(data[c-1]).some(x=>x.state==="in")))await loadWeek(c-1);stamp();render()}
