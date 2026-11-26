@@ -421,6 +421,8 @@ ovc.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{otherView=M[+b.datase
 // ---- hidden admin guide: tap the banner 5 times quickly ----
 {let taps=[];const hit=e=>{const n=Date.now();if(taps.length&&n-taps[taps.length-1]>1500)taps=[];taps.push(n);if(taps.length>=5){taps=[];if(navigator.vibrate)navigator.vibrate(40);openI=null;show(document.getElementById("agt").innerHTML+'<button class="closebar">Close</button>')}};
 ["header","#nxt"].forEach(q=>{const el=document.querySelector(q);Object.assign(el.style,{touchAction:"manipulation",userSelect:"none",webkitUserSelect:"none",webkitTouchCallout:"none"});el.addEventListener("pointerdown",hit)})}
+document.addEventListener("contextmenu",e=>{if(!e.target.closest("input,textarea,select"))e.preventDefault()});
+document.addEventListener("selectstart",e=>{if(!e.target.closest||!e.target.closest("input,textarea,select"))e.preventDefault()});
 // ---- on-pace tracker ----
 function typical(){const H=[],L=[];Object.keys(hl).forEach(k=>{const v=hl[k];if(v&&v.high!=null)H.push(v.high);if(v&&v.low!=null)L.push(v.low)});const av=a=>a.length?Math.round(a.reduce((p,q)=>p+q,0)/a.length):null;return{H:av(H),L:av(L),n:Math.max(H.length,L.length)}}
 function paceHTML(i,big){const r=weekTotals(i);if(r.done||(!r.any&&!r.anyP))return"";const fin=r.tot+r.proj;const T=typical();if(T.H==null&&T.L==null)return big?`<div class="vs n" style="text-align:center;font-size:13px">On pace for ~${fin}</div>`:"";
