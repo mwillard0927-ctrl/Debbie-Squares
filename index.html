@@ -186,6 +186,7 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <h4>📣 Get your pool on the app</h4><ul><li>The app gets better the more people from your pool use it: everyone sees who won each week, can watch each other's squares live, and races on the same leaderboard.</li><li>Tap <b>Share this app</b> to send the link or show the QR code. Anyone with a different squares sheet can tap <b>Add your own squares</b>.</li></ul>
 <h4>🔔 Results alerts</h4><ul><li>When a week's winning high &amp; low are posted, everyone with alerts on gets a notification with the numbers and how close <b>their</b> squares came.</li></ul>
 <h4>🎟️ More than one scorecard</h4><ul>
+<li>Names are unique in the pool: if someone already uses a name, pick a different one (like adding your last initial).</li>
 <li>Bought several? Tap <b>Add your own squares</b> and upload each sheet with the <b>same name</b>. Each one is added as another scorecard (#1, #2, #3…).</li>
 <li>Buttons at the bottom of the page switch between them. They're ranked left to right by which has the <b>best shot</b> at this week's high or low (🔥 = best shot), using live scores and projections. LIVE shows which ones have games on right now.</li>
 <li>Tap a week to see all your scorecards for that week, ranked the same way. For finished weeks they're ranked by how close each came to the winning high or low.</li>
@@ -388,7 +389,7 @@ const p=await dialog("Enter the admin PIN:","",true);if(p==null)return false;try
 alert((await pinWaitMsg())||"That PIN isn't right. Only the admin can enter the winning high & low. (5 wrong tries locks it for 15 minutes.)");return false}
 function hintUpd(){const el=document.getElementById("hint");if(!el)return;const admin=!POOL||!poolInfo.locked||ls("ds_pin_"+POOL,"");el.innerHTML="Tap a week to see its games. "+(admin?"Hold a finished week's square to enter the winning high &amp; low.":"The winning high &amp; low show up once they're posted.")}
 function memberId(){const k="ds_mid_"+meName();let id=ls(k,null);if(!id){id=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));lsSet(k,id)}return id}
-async function joinPool(){if(!POOL||!SUPA_URL.startsWith("https://"))return;try{await rpcJ("squares_join",{p_id:memberId(),p_pool:POOL,p_name:meName(),p_teams:W.map((_,i)=>TEAMS(i))})}catch(e){}}
+async function joinPool(){if(!POOL||!SUPA_URL.startsWith("https://"))return;if(PROF&&PROF.name.toLowerCase()!=="debbie")claimName(PROF.name);try{await rpcJ("squares_join",{p_id:memberId(),p_pool:POOL,p_name:meName(),p_teams:W.map((_,i)=>TEAMS(i))})}catch(e){}}
 function setPool(code){POOL=(code||"").toUpperCase().trim();lsSet(poolKey(),POOL);poolInfo=ls("ds_pinfo_"+POOL,{exists:false,locked:false});hl=ls(hlKey(),{});render();hintUpd();joinPool();loadHL()}
 function openPool(){openI=null;const admin=POOL&&poolInfo.locked&&ls("ds_pin_"+POOL,"");show(`<h2>My Pool</h2><div class="sub">Share winning numbers &amp; a leaderboard</div>
 ${POOL?`<div class="gm" style="text-align:center"><div class="sub">Your pool code</div><div style="font:800 26px -apple-system,system-ui,sans-serif;letter-spacing:2px">${esc(POOL)}</div><div class="sub">${poolInfo.locked?(admin?"🔓 You're the admin on this phone":"🔒 Locked — only the admin enters the high &amp; low"):"Anyone in the pool can enter the high &amp; low"}</div></div>
@@ -476,6 +477,10 @@ function cardScore(i,teams){const r=weekTotals(i,teams);const fin=r.tot+r.proj;c
 function rankedCards(i){return CARDS.map((c,k)=>({k,c,s:cardScore(i,cardTeams(c,i))})).sort((a,b)=>a.s.d-b.s.d)}
 function cardsChipHTML(i,cls){return rankedCards(i).map((x,n)=>`<button class="cchip${x.k===CUR?" on":""}" data-ck="${x.k}"><b>${n===0?"🔥 ":""}${cardLabel(x.k)}</b><span>${x.s.r.any?x.s.r.tot:"~"+x.s.fin}${x.s.live?' <em class="lvb">LIVE</em>':""}</span><i>${esc(x.s.txt)}</i></button>`).join("")}
 function renderCards(){const el=document.getElementById("cards");if(!el)return;if(CARDS.length<2){el.style.display="none";return}const cw=curWeek();el.style.display="block";el.innerHTML=`<div class="wl">Your scorecards · Week ${cw+1} · best shot first</div><div class="crow">${cardsChipHTML(cw)}</div>`;el.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>{switchCard(+b.dataset.ck);window.scrollTo({top:0,behavior:"smooth"})})}
+
+// ---- unique names in the pool ----
+function ownerId(){let o=ls("ds_owner",null);if(!o){o=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));lsSet("ds_owner",o)}return o}
+async function claimName(n){if(!SUPA_URL.startsWith("https://"))return true;try{return await rpcJ("squares_claim_name",{p_pool:POOL,p_name:n,p_owner:ownerId()})}catch(e){return null}}
 // ---- on-pace tracker ----
 function typical(){const H=[],L=[];Object.keys(hl).forEach(k=>{const v=hl[k];if(v&&v.high!=null)H.push(v.high);if(v&&v.low!=null)L.push(v.low)});const av=a=>a.length?Math.round(a.reduce((p,q)=>p+q,0)/a.length):null;return{H:av(H),L:av(L),n:Math.max(H.length,L.length)}}
 function paceHTML(i,big,tl){const r=weekTotals(i,tl);if(r.done||(!r.any&&!r.anyP))return"";const fin=r.tot+r.proj;const T=typical();if(T.H==null&&T.L==null)return big?`<div class="vs n" style="text-align:center;font-size:13px">On pace for ~${fin}</div>`:"";
@@ -581,9 +586,9 @@ ${PROF?`<hr style="margin:16px 0;border:none;border-top:1px solid var(--line)"><
 <button class="closebar">Close</button>`);
 const prg=document.getElementById("prg"),rvw=document.getElementById("rvw");
 const bindReview=()=>{rvw.innerHTML=reviewHTML();rvw.querySelectorAll("select").forEach(s=>s.onchange=()=>{draft[s.dataset.w][s.dataset.k]=s.value;const c=s.closest(".c");c.classList.toggle("bad",draft[s.dataset.w].filter(Boolean).length<3)});
-document.getElementById("svb").onclick=()=>{const nm=document.getElementById("fname").value.trim();if(!nm){alert("Please type your name first.");document.getElementById("fname").focus();return}
+document.getElementById("svb").onclick=async()=>{const nm=document.getElementById("fname").value.trim().replace(/\s+/g," ");if(!nm){alert("Please type your name first.");document.getElementById("fname").focus();return}
 const miss=draft.map((t,i)=>t.filter(Boolean).length<3?i+1:0).filter(Boolean);if(miss.length&&!confirm(`Weeks ${miss.join(", ")} have fewer than 3 teams. Save anyway?`))return;
-const nt=draft.map(t=>t.filter(Boolean));const same=CARDS.some(c=>c.n.toLowerCase()===nm.toLowerCase());if(same){CARDS.push({n:CARDS.find(c=>c.n.toLowerCase()===nm.toLowerCase()).n,t:nt});lsSet("ds_cards",CARDS);switchCard(CARDS.length-1);alert(`Added as scorecard #${CARDS.length} for ${nm}. Switch between your scorecards with the buttons at the bottom of the page.`);refreshAll();return}
+const nt=draft.map(t=>t.filter(Boolean));const same=CARDS.some(c=>c.n.toLowerCase()===nm.toLowerCase());if(!same){const ok=await claimName(nm);if(ok===false){alert(`"${nm}" is already taken in the pool. Please choose a more unique name, like adding your last initial (for example "${nm} W.").`);document.getElementById("fname").focus();return}}if(same){CARDS.push({n:CARDS.find(c=>c.n.toLowerCase()===nm.toLowerCase()).n,t:nt});lsSet("ds_cards",CARDS);switchCard(CARDS.length-1);alert(`Added as scorecard #${CARDS.length} for ${nm}. Switch between your scorecards with the buttons at the bottom of the page.`);refreshAll();return}
 if(CARDS.length>1&&!confirm(`This replaces your ${CARDS.length} scorecards with ${nm}'s squares. Continue?`))return;CARDS=[{n:nm,t:nt}];lsSet("ds_cards",CARDS);switchCard(0);refreshAll();setTimeout(()=>openTV(),300)}};
 document.getElementById("rdb").onclick=async()=>{const f=document.getElementById("fimg").files[0];if(!f){alert("Choose your screenshot first.");return}
 try{prg.textContent="Loading the reader (first time takes a moment)…";await loadTess();prg.textContent="Getting your picture ready…";const c=await prepImg(f);
