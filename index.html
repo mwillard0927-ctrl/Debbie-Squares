@@ -419,7 +419,7 @@ ovc.innerHTML=`<h2>Other scorecards</h2><div class="sub">Tap a name to see their
 ovc.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{otherView=M[+b.dataset.o];fillOther();ovc.scrollTop=0})}
 
 // ---- hidden admin guide: tap the title 6 times quickly ----
-{let taps=[];document.querySelector("header").addEventListener("click",()=>{const n=Date.now();taps=taps.filter(t=>n-t<2500);taps.push(n);if(taps.length>=6){taps=[];openI=null;show(document.getElementById("agt").innerHTML+'<button class="closebar">Close</button>')}})}
+{let taps=[];const hit=e=>{const n=Date.now();taps=taps.filter(t=>n-t<3500);taps.push(n);if(taps.length>=6){taps=[];if(e.cancelable)e.preventDefault();openI=null;show(document.getElementById("agt").innerHTML+'<button class="closebar">Close</button>')}};["header","#nxt"].forEach(q=>{const el=document.querySelector(q);el.style.touchAction="manipulation";el.style.userSelect="none";el.style.webkitUserSelect="none";el.addEventListener("pointerdown",hit)})}
 // ---- on-pace tracker ----
 function typical(){const H=[],L=[];Object.keys(hl).forEach(k=>{const v=hl[k];if(v&&v.high!=null)H.push(v.high);if(v&&v.low!=null)L.push(v.low)});const av=a=>a.length?Math.round(a.reduce((p,q)=>p+q,0)/a.length):null;return{H:av(H),L:av(L),n:Math.max(H.length,L.length)}}
 function paceHTML(i,big){const r=weekTotals(i);if(r.done||(!r.any&&!r.anyP))return"";const fin=r.tot+r.proj;const T=typical();if(T.H==null&&T.L==null)return big?`<div class="vs n" style="text-align:center;font-size:13px">On pace for ~${fin}</div>`:"";
