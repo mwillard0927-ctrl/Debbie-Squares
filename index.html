@@ -494,7 +494,7 @@ window.addEventListener("popstate",()=>{if(ov.classList.contains("on")){openI=nu
 ov.addEventListener("click",e=>{if(e.target.id==="ov"||e.target.id==="ovx"||e.target.classList.contains("closebar"))closeWk()});
 ovc.addEventListener("click",e=>{if(e.target.classList.contains("tvset")){e.preventDefault();openTV()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeWk()});
-function fillWk(){const i=openI,lbl=W[i][0],teams=TEAMS(i),d=wk(i);let h=`<h2>Week ${i+1}</h2><div class="sub">${lbl}</div>`;let tot=0,any=false,proj=0,anyP=false;
+function fillWk(){const i=openI,lbl=W[i][0],d=wk(i),tm=x=>x&&!x.bye&&x.date?new Date(x.date).getTime():9e15,teams=[...TEAMS(i)].sort((a,b)=>tm(d[a])-tm(d[b]));let h=`<h2>Week ${i+1}</h2><div class="sub">${lbl}</div>`;let tot=0,any=false,proj=0,anyP=false;
 teams.forEach(t=>{const x=d[t];if(!x){h+=`<div class="gm"><div class="row mine"><span class="nm">${N[t]}</span></div><div class="meta">Game info loading…</div></div>`;return}
 if(x.bye){h+=`<div class="gm"><div class="row mine"><span class="nm">${N[t]}</span><span class="sc">BYE</span></div><div class="meta">No game this week</div></div>`;return}
 const o=x.opp,pre=x.state==="pre",live=x.state==="in";if(pre){if(x.proj!=null){proj+=x.proj;anyP=true}}else{tot+=x.score;any=true}
