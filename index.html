@@ -125,7 +125,7 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <li>The app then shows each game's local channel, whether it's free with an antenna, and whether you can watch it with what you have.</li>
 <li>Sunday 1 PM and 4 PM CBS/FOX games are <b>regional</b>: they show in some cities and not others. Games with your city's home team are always shown locally.</li>
 <li>No cable or streaming? A basic TV antenna (about $25) gets CBS, FOX, NBC and ABC free.</li>
-<li>Debbie's Squares is already set for Detroit with an antenna, Netflix and Prime. New squares ask for this right after you save them.</li></ul>
+<li>If you add your own squares, the app asks for this right after you save them.</li></ul>
 <h4>Game alerts</h4><ul>
 <li>The first time you open the app, it asks <b>"Turn on game alerts?"</b> Tap <b>Yes</b>, then <b>Allow</b> when your phone asks.</li>
 <li>Missed it or tapped Not now? Tap <b>🔔 Game alerts</b> under the buttons any time, then <b>Allow</b>. Tap it again to turn alerts off.</li>
@@ -140,21 +140,14 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <h4>👀 Other people's scorecards</h4><ul>
 <li>Tap <b>👀 Other people's scorecards</b> to see everyone else who added their squares, with their total for this week.</li>
 <li>Tap a name to see their full squares, which update live while games are on. Tap <b>← All scorecards</b> to go back.</li></ul>
-<h4>🔑 Admin tools</h4><ul>
-<li>At the bottom of the Leaderboard. Needs the admin PIN.</li>
-<li>Fix or clear any week's winning high &amp; low, remove old or duplicate names from the leaderboard, and change the PIN.</li>
-<li>5 wrong PIN tries locks PIN entry for 15 minutes.</li></ul>
-<h4>🔔 Results alerts</h4><ul><li>When the admin enters a week's winning high &amp; low, everyone with alerts on gets a notification with the numbers and how close <b>their</b> squares came.</li></ul>
+<h4>🔔 Results alerts</h4><ul><li>When a week's winning high &amp; low are posted, everyone with alerts on gets a notification with the numbers and how close <b>their</b> squares came.</li></ul>
 <h4>📈 On pace</h4><ul>
 <li>The current week shows what your teams are <b>on pace</b> for (points so far + projected points still to come) next to a <b>typical</b> winning high and low (the average of the weeks entered so far).</li>
 <li>Tap the week for details, like "~6 short of a typical high." It updates as games are played.</li></ul>
 <h4>📸 Recap picture</h4><ul><li>When a week is over, tap it and hit <b>Share recap picture</b> to text a picture of your scores, total and how close you came.</li></ul>
-<h4>Enter the high &amp; low winners</h4><ul>
-<li>After a week is over, <b>press and hold</b> its square for about half a second.</li>
-<li>Type the winning <b>HIGH</b> score and tap <b>Save</b>, then the winning <b>LOW</b> score and tap <b>Save</b>.</li>
-<li>Tap <b>Skip</b> to leave one unchanged. Hold the square again any time to fix a number.</li>
-<li>They're <b>shared with everyone</b>, and only the <b>admin</b> can enter them: the first time, it asks for the admin PIN, then remembers it on that phone.</li>
-<li>Once entered, the square shows how close you came, like <b style="color:var(--accent)">"🏆 Won the low!"</b> or "8 from the low".</li>
+<h4>Winning high &amp; low</h4><ul>
+<li>Once a week is over and its winning high &amp; low are posted, they show on that week's square for everyone.</li>
+<li>Your square then shows how close you came, like <b style="color:var(--accent)">"🏆 Won the low!"</b> or "8 from the low".</li>
 <li>The season chart (tap <b>Season total</b>) shows every week's total next to the winning high and low.</li></ul>
 <h4>Add your own squares (different sheet?)</h4>
 <div class="ig"><img src="example-squares.jpg" alt="Example squares sheet">
@@ -301,7 +294,7 @@ async function saveHL(i){if(!POOL)return true;const v=hl[i]||{};try{const ok=awa
 async function adminOK(){if(!POOL||!poolInfo.locked)return true;let pin=ls("ds_pin_"+POOL,"");try{if(pin&&await rpcJ("squares_check_pin",{p_code:POOL,p_pin:pin}))return true}catch(e){return!!pin}
 const p=await dialog("Enter the admin PIN:","",true);if(p==null)return false;try{if(await rpcJ("squares_check_pin",{p_code:POOL,p_pin:p})){lsSet("ds_pin_"+POOL,p);hintUpd();return true}}catch(e){alert("Couldn't check the PIN — are you online?");return false}
 alert((await pinWaitMsg())||"That PIN isn't right. Only the admin can enter the winning high & low. (5 wrong tries locks it for 15 minutes.)");return false}
-function hintUpd(){const el=document.getElementById("hint");if(!el)return;const admin=!POOL||!poolInfo.locked||ls("ds_pin_"+POOL,"");el.innerHTML="Tap a week to see its games. "+(admin?"Hold a finished week's square to enter the winning high &amp; low.":"The winning high &amp; low are entered by the admin.")}
+function hintUpd(){const el=document.getElementById("hint");if(!el)return;const admin=!POOL||!poolInfo.locked||ls("ds_pin_"+POOL,"");el.innerHTML="Tap a week to see its games. "+(admin?"Hold a finished week's square to enter the winning high &amp; low.":"The winning high &amp; low show up once they're posted.")}
 function memberId(){const k="ds_mid_"+meName();let id=ls(k,null);if(!id){id=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));lsSet(k,id)}return id}
 async function joinPool(){if(!POOL||!SUPA_URL.startsWith("https://"))return;try{await rpcJ("squares_join",{p_id:memberId(),p_pool:POOL,p_name:meName(),p_teams:W.map((_,i)=>TEAMS(i))})}catch(e){}}
 function setPool(code){POOL=(code||"").toUpperCase().trim();lsSet(poolKey(),POOL);poolInfo=ls("ds_pinfo_"+POOL,{exists:false,locked:false});hl=ls(hlKey(),{});render();hintUpd();joinPool();loadHL()}
@@ -323,7 +316,7 @@ M.map((m,k)=>`<tr style="border-top:1px solid var(--line)${m.name===meName()?";b
 let any=false;for(let i=17;i>=0;i--){const hv=hl[i];if(!hv||(hv.high==null&&hv.low==null))continue;const done=M.filter(m=>m.wk[i].done);if(!done.length)continue;any=true;let line=`<div class="gm" style="padding:8px"><b>Week ${i+1}</b>`;
 if(hv.high!=null){const top=[...done].sort((a,b)=>b.wk[i].tot-a.wk[i].tot)[0];const w=done.filter(m=>m.wk[i].tot>=hv.high);line+=`<div style="font-size:13px;margin-top:3px"><span class="h" style="color:var(--accent);font-weight:700">High ${hv.high}:</span> `+(w.length?w.map(m=>`🏆 ${esc(m.name)} (${m.wk[i].tot})`).join(", "):`closest ${esc(top.name)} ${top.wk[i].tot} — ${hv.high-top.wk[i].tot} short`)+`</div>`}
 if(hv.low!=null){const bot=[...done].sort((a,b)=>a.wk[i].tot-b.wk[i].tot)[0];const w=done.filter(m=>m.wk[i].tot<=hv.low);line+=`<div style="font-size:13px"><span style="color:#1565c0;font-weight:700">Low ${hv.low}:</span> `+(w.length?w.map(m=>`🏆 ${esc(m.name)} (${m.wk[i].tot})`).join(", "):`closest ${esc(bot.name)} ${bot.wk[i].tot} — ${bot.wk[i].tot-hv.low} above`)+`</div>`}
-h+=line+`</div>`}if(!any)h+=`<p class="sub">Week results show here once the winning high &amp; low are entered.</p>`;h+=`<p class="sub">Everyone using the app shows up here once they open it. "Behind 1st" is the Grand Prize gap (total points over all weeks).</p><button class="btn alt" id="adm" style="width:100%">🔑 Admin tools</button><button class="closebar">Close</button>`;ovc.innerHTML=h;document.getElementById("adm").onclick=openAdmin}
+h+=line+`</div>`}if(!any)h+=`<p class="sub">Week results show here once the winning high &amp; low are entered.</p>`;h+=`<p class="sub">Everyone using the app shows up here once they open it. "Behind 1st" is the Grand Prize gap (total points over all weeks).</p>${ls("ds_pin_"+POOL,"")?`<button class="btn alt" id="adm" style="width:100%">🔑 Admin tools</button>`:""}<button class="closebar">Close</button>`;ovc.innerHTML=h;const ad=document.getElementById("adm");if(ad)ad.onclick=openAdmin}
 // ---- admin tools ----
 async function pinWaitMsg(){try{const s=await rpcJ("squares_pin_wait",{p_code:POOL});if(s>0)return`Too many wrong PINs. Try again in ${Math.ceil(s/60)} minute${s>60?"s":""}.`}catch(e){}return""}
 async function openAdmin(){if(!(await adminOK()))return;const pin=ls("ds_pin_"+POOL,"");openI=null;show(`<h2>Admin tools</h2><div class="sub">Loading…</div><button class="closebar">Close</button>`);let mem=[];try{mem=await rpcJ("squares_pool_members",{p_pool:POOL})||[]}catch(e){}
