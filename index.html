@@ -52,6 +52,8 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 #ov .wt{text-align:center;font-weight:700;font-size:17px;border-top:1px solid var(--line);padding-top:8px}
 #ov .x{text-align:center;color:var(--mute);font-size:11px;margin-top:10px}
 .wk{cursor:pointer}
+#helpb{display:block;margin:14px auto 0;font:700 15px -apple-system,system-ui,sans-serif;padding:12px 20px;border-radius:10px;border:2px solid var(--line);background:#000;color:#ffd54a}
+#help ul{margin:6px 0 0;padding-left:20px;font-size:14.5px;line-height:1.45}#help li{margin-bottom:8px}#help h4{margin:12px 0 0;font-size:15px}
 .tv{margin-top:8px;font-size:12.5px;line-height:1.35;border-top:1px dashed var(--line);padding-top:6px}
 .tv b{color:var(--accent)}.tv .q{color:#b26a00;font-weight:700}.tv ol{margin:2px 0 0;padding-left:18px}
 </style></head><body>
@@ -59,6 +61,33 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <div class="grid" id="grid"></div>
 <p class="hint" id="hint">Hold a finished week's square to enter the winning high &amp; low scores.</p>
 <p class="hint" id="upd"></p>
+<button id="helpb">How to use this app</button>
+<div id="help" style="display:none"><h2>How to use</h2><div class="sub">Debbie's Squares</div>
+<h4>The main screen</h4><ul>
+<li>Each square is one week of the season, showing your 3 teams for that week.</li>
+<li>The week happening now is highlighted in <b>yellow</b>.</li>
+<li><b>Final</b> under a score means the game is over. A <b style="color:var(--live)">red</b> clock (like "Q3 4:12") means the game is live right now.</li>
+<li>Scores with a <b>~</b> (like ~21) are <b>projected</b> points from the betting lines for games not played yet.</li>
+<li><b>Total</b> adds up your teams' points for the week. <b>Projected</b> is the expected total before the games are played.</li>
+<li><b>BYE</b> means that team doesn't play that week.</li></ul>
+<h4>See a week up close</h4><ul>
+<li><b>Tap any week</b> to open it full screen.</li>
+<li>You'll see each game: who your team played, both logos and records, the score, and whether it's final, live, or when it starts.</li>
+<li>Upcoming games show <b>How to watch</b>: green = free on local Detroit TV or on your Prime/Netflix; orange = a channel you may not have, with 2 ways to watch.</li>
+<li><b>Tap anywhere outside the box</b> to close it.</li></ul>
+<h4>Enter the high &amp; low winners</h4><ul>
+<li>After a week is over, <b>press and hold</b> its square for about half a second.</li>
+<li>Type the winning <b>HIGH</b> score and tap <b>Save</b>, then the winning <b>LOW</b> score and tap <b>Save</b>.</li>
+<li>Tap <b>Skip</b> to leave one unchanged. Hold the square again any time to fix a number.</li>
+<li>These are saved on this phone only.</li></ul>
+<h4>Scores &amp; updates</h4><ul>
+<li>Scores update by themselves every minute while the app is open.</li>
+<li>The line under the grid shows when scores last updated. If it says <b>Offline</b>, you're seeing the last saved scores.</li>
+<li>Works without internet. It just shows the last scores it saved.</li></ul>
+<h4>Put it on your home screen</h4><ul>
+<li><b>iPhone (Safari):</b> tap Share, then <b>Add to Home Screen</b>.</li>
+<li><b>Android (Chrome):</b> tap the ⋮ menu, then <b>Add to Home screen</b> / <b>Install app</b>.</li></ul>
+<div class="x">Tap outside to close</div></div>
 <div id="ov"><div class="card" id="ovc"></div></div>
 <div id="modal"><div class="box"><div id="mtitle" style="font-weight:700"></div><input id="minp" type="number" inputmode="numeric"><div class="btns"><button class="cx" id="mcx">Skip</button><button class="ok" id="mok">Save</button></div></div></div>
 <script>
@@ -102,6 +131,8 @@ if(!yes.length&&!other.length)other.push({n:tv.join(", "),s:["Search the network
 other.forEach(o=>{h+=`${yes.length?"<br>":""}<span class="q">${o.n} — not sure she has it:</span><ol>${o.s.map(v=>`<li>${v}</li>`).join("")}</ol>`});
 return h+`</div>`}
 let openI=null;
+function openHelp(){openI=null;document.getElementById("ovc").innerHTML=document.getElementById("help").innerHTML;document.getElementById("ov").classList.add("on")}
+document.getElementById("helpb").onclick=openHelp;
 function openWk(i){openI=i;fillWk();document.getElementById("ov").classList.add("on")}
 function closeWk(){openI=null;document.getElementById("ov").classList.remove("on")}
 document.getElementById("ov").addEventListener("click",e=>{if(e.target.id==="ov")closeWk()});
