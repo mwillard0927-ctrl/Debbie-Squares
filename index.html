@@ -119,7 +119,7 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <h4>Game alerts</h4><ul>
 <li>Tap <b>🔔 Game alerts</b> under the buttons and allow notifications.</li>
 <li>You'll get a buzz when your team <b>kicks off</b>, <b>scores</b>, and when the game is <b>final</b>, plus a <b>weekly heads-up</b> listing your games, times and channels.</li>
-<li>Alerts work while the app is open or running in the background. If you swipe the app closed, they stop until you open it again.</li></ul>
+<li>Alerts come even when the app is closed. <b>iPhone:</b> add the app to your Home Screen first (iOS 16.4 or newer), then turn alerts on from there.</li></ul>
 <h4>Enter the high &amp; low winners</h4><ul>
 <li>After a week is over, <b>press and hold</b> its square for about half a second.</li>
 <li>Type the winning <b>HIGH</b> score and tap <b>Save</b>, then the winning <b>LOW</b> score and tap <b>Save</b>.</li>
@@ -218,11 +218,21 @@ function nextGame(){const now=Date.now();let live=[],nx=null;W.forEach((_,i)=>{c
 function cd(ms){if(ms<=0)return"starting now";const m=Math.round(ms/6e4),d=Math.floor(m/1440),h=Math.floor(m%1440/60),mm=m%60;return"in "+(d?d+"d "+h+"h":h?h+"h "+mm+"m":mm+"m")}
 function renderNext(){const el=document.getElementById("nxt");const{live,nx}=nextGame();if(live.length){el.innerHTML=live.map(({x,t})=>`<span class="lv">● LIVE</span> <b>${N[t]} ${x.score}</b> – ${x.opp?esc(x.opp.name)+" "+x.opp.score:""} · ${esc(x.detail||"")}`).join("<br>");return}
 if(!nx){el.textContent="No upcoming games found yet.";return}const x=nx.x,dt=new Date(x.date);el.innerHTML=`Next: <b>${N[nx.t]}</b> ${x.home?"vs":"@"} ${x.opp?esc(x.opp.name):""} · ${dt.toLocaleString([],{weekday:"short",hour:"numeric",minute:"2-digit"})} (${cd(dt-Date.now())}) · 📺 ${tvShort(x,nx.t)}`}
+
+// ---- server push (Supabase) ----
+const SUPA_URL="https://ksuvjhutalvwgikvsdeu.supabase.co",SUPA_ANON="sb_publishable_v60aHIwkGcr_a9UvWTb9jA_7qcffk8B",VAPID_PUB="BI_S7yakise6qApBZkt11-WyuTgMsrdNJOG6sDaJAaXOQK4M3TYKvgyA1b-YJ8CFLMZR5hhIymB5K5FZgpQXtOE";
+const pushReady=()=>SUPA_URL.startsWith("https://")&&"PushManager"in window;
+function b64u(s){const p="=".repeat((4-s.length%4)%4);const b=atob((s+p).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from([...b].map(c=>c.charCodeAt(0)))}
+async function rpc(fn,args){const r=await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`,{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPA_ANON},body:JSON.stringify(args)});if(!r.ok)throw new Error(await r.text())}
+let serverPush=ls("ds_spush",false);
+async function pushSubscribe(){if(!pushReady())return false;try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});const k=sub.toJSON().keys;
+await rpc("squares_subscribe",{p_endpoint:sub.endpoint,p_p256dh:k.p256dh,p_auth:k.auth,p_teams:W.map((_,i)=>TEAMS(i)),p_name:PROF?PROF.name:"Debbie"});serverPush=true;lsSet("ds_spush",true);return true}catch(e){serverPush=false;lsSet("ds_spush",false);return false}}
+async function pushUnsubscribe(){try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){await rpc("squares_unsubscribe",{p_endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe()}}catch(e){}serverPush=false;lsSet("ds_spush",false)}
 // ---- alerts ----
 let alertsOn=ls("ds_alerts",false)&&"Notification"in window&&Notification.permission==="granted";const prev={};let primed=false;
 function albUpd(){const b=document.getElementById("alb");b.textContent="🔔 Game alerts: "+(alertsOn?"On":"Off");b.classList.toggle("on",alertsOn)}
-document.getElementById("alb").onclick=async()=>{if(alertsOn){alertsOn=false;lsSet("ds_alerts",false);albUpd();return}if(!("Notification"in window)){alert("This phone's browser doesn't support alerts. Try adding the app to your home screen first.");return}const p=await Notification.requestPermission();if(p!=="granted"){alert("Alerts are blocked. Allow notifications for this site in your browser settings, then try again.");return}alertsOn=true;lsSet("ds_alerts",true);albUpd();notify("Game alerts are on 🏈","You'll get kickoffs, scores and finals for your teams.","on");headsUp(true)};
-async function notify(title,body,tag){if(!alertsOn)return;try{const r=await navigator.serviceWorker.ready;r.showNotification(title,{body,tag,icon:"icon.svg",badge:"icon.svg",renotify:true})}catch(e){try{new Notification(title,{body,icon:"icon.svg"})}catch(_){}}}
+document.getElementById("alb").onclick=async()=>{if(alertsOn){alertsOn=false;lsSet("ds_alerts",false);albUpd();pushUnsubscribe();return}if(!("Notification"in window)){alert("This phone's browser doesn't support alerts. Try adding the app to your home screen first.");return}const p=await Notification.requestPermission();if(p!=="granted"){alert("Alerts are blocked. Allow notifications for this site in your browser settings, then try again.");return}alertsOn=true;lsSet("ds_alerts",true);albUpd();const srv=await pushSubscribe();notify("Game alerts are on 🏈",srv?"You'll get kickoffs, scores and finals for your teams — even with the app closed.":"You'll get kickoffs, scores and finals while the app is open or in the background.","on",true);if(!srv)headsUp(true)};
+async function notify(title,body,tag,force){if(!alertsOn||(serverPush&&!force))return;try{const r=await navigator.serviceWorker.ready;r.showNotification(title,{body,tag,icon:"icon.svg",badge:"icon.svg",renotify:true})}catch(e){try{new Notification(title,{body,icon:"icon.svg"})}catch(_){}}}
 function checkAlerts(){W.forEach((_,i)=>{const d=wk(i);TEAMS(i).forEach(t=>{const x=d[t];if(!x||x.bye)return;const k=i+t,p=prev[k];prev[k]={s:x.state,sc:x.score};if(!primed||!p)return;const o=x.opp?x.opp.name:"";
 if(p.s==="pre"&&x.state==="in")notify(`🏈 Kickoff: ${N[t]} ${x.home?"vs":"@"} ${o}`,`Week ${i+1} · 📺 ${tvShort(x,t)}`,"k"+k);
 else if(x.state!=="pre"&&x.score>p.sc)notify(`${N[t]} scored! +${x.score-p.sc}`,`${N[t]} ${x.score} – ${o} ${x.opp?x.opp.score:""} · ${x.detail||""}`,"s"+k);
@@ -289,13 +299,13 @@ const prg=document.getElementById("prg"),rvw=document.getElementById("rvw");
 const bindReview=()=>{rvw.innerHTML=reviewHTML();rvw.querySelectorAll("select").forEach(s=>s.onchange=()=>{draft[s.dataset.w][s.dataset.k]=s.value;const c=s.closest(".c");c.classList.toggle("bad",draft[s.dataset.w].filter(Boolean).length<3)});
 document.getElementById("svb").onclick=()=>{const nm=document.getElementById("fname").value.trim();if(!nm){alert("Please type your name first.");document.getElementById("fname").focus();return}
 const miss=draft.map((t,i)=>t.filter(Boolean).length<3?i+1:0).filter(Boolean);if(miss.length&&!confirm(`Weeks ${miss.join(", ")} have fewer than 3 teams. Save anyway?`))return;
-PROF={name:nm,teams:draft.map(t=>t.filter(Boolean))};lsSet("ds_prof",PROF);hl=ls(hlKey(),{});setTitle();closeWk();render();refreshAll()}};
+PROF={name:nm,teams:draft.map(t=>t.filter(Boolean))};lsSet("ds_prof",PROF);if(alertsOn)pushSubscribe();hl=ls(hlKey(),{});setTitle();closeWk();render();refreshAll()}};
 document.getElementById("rdb").onclick=async()=>{const f=document.getElementById("fimg").files[0];if(!f){alert("Choose your screenshot first.");return}
 try{prg.textContent="Loading the reader (first time takes a moment)…";await loadTess();prg.textContent="Getting your picture ready…";const c=await prepImg(f);
 const r=await Tesseract.recognize(c,"eng",{logger:m=>{if(m.status==="recognizing text")prg.textContent=`Reading your squares… ${Math.round(m.progress*100)}%`}});
 draft=parseOCR(r.data).map(t=>[t[0]||"",t[1]||"",t[2]||""]);const got=draft.flat().filter(Boolean).length;prg.textContent=`Found ${got} of 54 teams.`+(got<54?" Fix the red weeks below.":" Looks complete!");bindReview()}
 catch(e){prg.textContent="Couldn't read that picture (you need internet the first time). You can enter your teams by hand below.";draft=Array.from({length:18},()=>["","",""]);bindReview()}};
-const rs=document.getElementById("rst");if(rs)rs.onclick=()=>{if(!confirm("Switch back to Debbie's Squares? Your teams will be removed from this phone."))return;PROF=null;try{localStorage.removeItem("ds_prof")}catch(e){}hl=ls(hlKey(),{});setTitle();closeWk();render()}};
+const rs=document.getElementById("rst");if(rs)rs.onclick=()=>{if(!confirm("Switch back to Debbie's Squares? Your teams will be removed from this phone."))return;PROF=null;try{localStorage.removeItem("ds_prof")}catch(e){}if(alertsOn)pushSubscribe();hl=ls(hlKey(),{});setTitle();closeWk();render()}};
 // ---- Live data from ESPN ----
 let fails=0;
 async function loadWeek(i){try{const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2026&seasontype=2&week=${i+1}`,{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();if(!(j.events||[]).length)return;const old=all[i]||{};const d={};
@@ -306,7 +316,7 @@ all[i]=d;cache[i]=d;fetched[i]=1;lsSet("ds_all",cache);lsSet("ds_fetched",fetche
 async function refreshAll(){fails=0;await Promise.all(W.map((_,i)=>loadWeek(i)));stamp();render();checkAlerts();headsUp()}
 async function refreshCur(){fails=0;const c=curWeek();await loadWeek(c);if(c>0&&Object.values(wk(c-1)).some(x=>x.state==="in"))await loadWeek(c-1);stamp();render();checkAlerts()}
 function stamp(){document.getElementById("upd").textContent=fails?"Offline — showing saved scores.":"Live scores updated "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
-setTitle();albUpd();render();refreshAll();setInterval(refreshCur,60000);
+setTitle();albUpd();render();refreshAll();if(alertsOn&&pushReady())pushSubscribe();setInterval(refreshCur,60000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshCur()});
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
 </script></body></html>
