@@ -230,7 +230,7 @@ await rpc("squares_subscribe",{p_endpoint:sub.endpoint,p_p256dh:k.p256dh,p_auth:
 async function pushUnsubscribe(){try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){await rpc("squares_unsubscribe",{p_endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe()}}catch(e){}serverPush=false;lsSet("ds_spush",false)}
 
 // ---- first-open prompts ----
-function onboard(){const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+function onboard(){const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const standalone=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone;
 if(ov.classList.contains("on"))return;
 if(ios&&!standalone){if(ls("ds_onb_ios",false))return;lsSet("ds_onb_ios",true);openI=null;show(`<h2>Get game alerts</h2><div class="sub">On iPhone, add the app to your Home Screen first</div>
 <div class="stp"><span class="n">1</span><div>Tap the <b>Share</b> button <span style="display:inline-block;border:2px solid #1565c0;border-radius:6px;padding:0 6px;color:#1565c0;font-weight:800">⬆︎</span> at the bottom of Safari.</div></div>
