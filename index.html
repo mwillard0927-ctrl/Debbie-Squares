@@ -52,6 +52,8 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 #ov .wt{text-align:center;font-weight:700;font-size:17px;border-top:1px solid var(--line);padding-top:8px}
 #ov .x{text-align:center;color:var(--mute);font-size:11px;margin-top:10px}
 .wk{cursor:pointer}
+.tv{margin-top:8px;font-size:12.5px;line-height:1.35;border-top:1px dashed var(--line);padding-top:6px}
+.tv b{color:var(--accent)}.tv .q{color:#b26a00;font-weight:700}.tv ol{margin:2px 0 0;padding-left:18px}
 </style></head><body>
 <header><span class="ttl" id="ttl">Debbie's Squares</span></header>
 <div class="grid" id="grid"></div>
@@ -78,6 +80,27 @@ function press(el,i){let t;const start=()=>{el._held=false;t=setTimeout(()=>{el.
 function dialog(title,val){return new Promise(res=>{const m=document.getElementById("modal"),inp=document.getElementById("minp");document.getElementById("mtitle").textContent=title;inp.value=val??"";m.style.display="flex";setTimeout(()=>inp.focus(),50);const ok=document.getElementById("mok"),cx=document.getElementById("mcx");const done=v=>{m.style.display="none";ok.onclick=cx.onclick=null;res(v)};ok.onclick=()=>done(inp.value===""?null:+inp.value);cx.onclick=()=>done(undefined)})}
 async function ask(i){const cur=hl[i]||{};const h=await dialog(`Week ${i+1}: winning HIGH score`,cur.high);const l=await dialog(`Week ${i+1}: winning LOW score`,cur.low);hl[i]={high:h===undefined?cur.high??null:h,low:l===undefined?cur.low??null:l};lsSet("ds_hl",hl);render()}
 
+
+const DTW={CBS:"WWJ CBS 62",FOX:"WJBK FOX 2",NBC:"WDIV NBC 4",ABC:"WXYZ ABC 7"};
+function watch(x,t){if(!x||x.bye||x.state==="post")return"";const tv=(x.tvs||[]).map(v=>v.toUpperCase());const has=k=>tv.some(v=>v.includes(k));
+if(!tv.length)return`<div class="tv">📺 TV channel not announced yet — check back closer to game day.</div>`;
+const yes=[],unk=[];const dt=x.date?new Date(x.date):null;const sun=dt&&dt.getDay()===0;const hr=dt?dt.getHours():0;
+const det=t==="DET"||(x.opp&&x.opp.ab==="DET");
+["NBC","ABC"].forEach(k=>{if(has(k))yes.push(`Free over-the-air on ${DTW[k]}`)});
+["CBS","FOX"].forEach(k=>{if(!has(k))return;const regional=sun&&hr<20;if(!regional||det)yes.push(`Free over-the-air on ${DTW[k]}`+(det?" (Lions game — always shown in Detroit)":""));else unk.push(k)});
+if(has("PRIME"))yes.push("Amazon Prime Video (her Prime account)");
+if(has("NETFLIX"))yes.push("Netflix (her Netflix account)");
+if(has("YOUTUBE"))yes.push("YouTube (free stream)");
+let h=`<div class="tv">📺 <b>How to watch:</b> `;
+if(yes.length)h+=yes.join(" · ");
+const other=[];
+unk.forEach(k=>other.push({n:`${k} (regional)`,s:[`Check the 506sports.com ${k} coverage map (posted midweek) — if Detroit is shaded for this game, it's free on ${DTW[k]}`,"Otherwise: NFL Sunday Ticket on YouTube / YouTube TV (out-of-market games)"]}));
+if(has("ESPN")&&!has("ABC"))other.push({n:"ESPN",s:["ESPN app / ESPN streaming subscription, or YouTube TV / Sling Orange","NFL+ app (live on phone/tablet for prime-time games)"]});
+if(has("NFL NET")||tv.includes("NFLN"))other.push({n:"NFL Network",s:["NFL+ app (live on phone/tablet)","YouTube TV, Fubo or Sling Blue"]});
+if(has("PEACOCK"))other.push({n:"Peacock",s:["Peacock subscription (app or website)","If also on NBC: free on WDIV NBC 4"]});
+if(!yes.length&&!other.length)other.push({n:tv.join(", "),s:["Search the network's app for this game","NFL+ app (live on phone for local & prime-time games)"]});
+other.forEach(o=>{h+=`${yes.length?"<br>":""}<span class="q">${o.n} — not sure she has it:</span><ol>${o.s.map(v=>`<li>${v}</li>`).join("")}</ol>`});
+return h+`</div>`}
 let openI=null;
 function openWk(i){openI=i;fillWk();document.getElementById("ov").classList.add("on")}
 function closeWk(){openI=null;document.getElementById("ov").classList.remove("on")}
@@ -92,12 +115,12 @@ const win=!pre&&o&&x.state==="post";const them=o?`<div class="row${win&&o.score<
 const rows=x.home?them+me:me+them;
 let meta=live?x.detail:pre?(x.date?new Date(x.date).toLocaleString([],{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"")+(x.proj!=null?" · projected":""):"Final";
 if(o)meta=(x.home?"vs ":"@ ")+o.name+" · "+meta;
-h+=`<div class="gm${live?" lv":""}">${rows}<div class="meta${live?" live":""}">${meta}</div></div>`});
+h+=`<div class="gm${live?" lv":""}">${rows}<div class="meta${live?" live":""}">${meta}</div>${watch(x,t)}</div>`});
 if(any)h+=`<div class="wt">Total: ${tot}</div>`;else if(anyP)h+=`<div class="wt" style="color:var(--mute)">Projected: ~${proj}</div>`;
 const r=hl[i];if(r&&(r.high!=null||r.low!=null))h+=`<div class="hl" style="text-align:center;font-size:13px">High <span class="h">${r.high??"–"}</span> · Low <span class="l">${r.low??"–"}</span></div>`;
 h+=`<div class="x">Tap outside to close</div>`;document.getElementById("ovc").innerHTML=h}
 let fails=0;
-async function loadWeek(i){const teams=W[i][1];try{const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2026&seasontype=2&week=${i+1}`,{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();if(!(j.events||[]).length)return;const old=data[i]||{};const d={};j.events.forEach(ev=>{const c=ev.competitions[0];const st=c.status.type;const odds=(c.odds||[])[0];c.competitors.forEach(cp=>{const ab=cp.team.abbreviation==="WAS"?"WSH":cp.team.abbreviation;if(!teams.includes(ab))return;let proj=null;if(odds&&odds.overUnder!=null){const ou=+odds.overUnder;const fav=odds.homeTeamOdds?.favorite?"home":odds.awayTeamOdds?.favorite?"away":null;const spr=Math.abs(+odds.spread||0);proj=Math.round((ou+(fav?(fav===cp.homeAway?1:-1)*spr:0))/2)}if(proj==null&&old[ab]&&old[ab].proj!=null)proj=old[ab].proj;const op=c.competitors.find(o=>o!==cp);d[ab]={score:+cp.score||0,state:st.state,detail:st.shortDetail,proj,home:cp.homeAway==="home",date:ev.date,name:cp.team.shortDisplayName,logo:cp.team.logo,rec:(cp.records||[])[0]?.summary,opp:op?{ab:op.team.abbreviation,name:op.team.shortDisplayName,logo:op.team.logo,score:+op.score||0,rec:(op.records||[])[0]?.summary}:null}})});teams.forEach(t=>{if(!d[t])d[t]={bye:true}});data[i]=d;cache[i]=d;lsSet("ds_cache",cache)}catch(e){fails++}}
+async function loadWeek(i){const teams=W[i][1];try{const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2026&seasontype=2&week=${i+1}`,{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();if(!(j.events||[]).length)return;const old=data[i]||{};const d={};j.events.forEach(ev=>{const c=ev.competitions[0];const st=c.status.type;const odds=(c.odds||[])[0];c.competitors.forEach(cp=>{const ab=cp.team.abbreviation==="WAS"?"WSH":cp.team.abbreviation;if(!teams.includes(ab))return;let proj=null;if(odds&&odds.overUnder!=null){const ou=+odds.overUnder;const fav=odds.homeTeamOdds?.favorite?"home":odds.awayTeamOdds?.favorite?"away":null;const spr=Math.abs(+odds.spread||0);proj=Math.round((ou+(fav?(fav===cp.homeAway?1:-1)*spr:0))/2)}if(proj==null&&old[ab]&&old[ab].proj!=null)proj=old[ab].proj;const op=c.competitors.find(o=>o!==cp);const tvs=[...new Set([...(c.broadcasts||[]).flatMap(b=>b.names||[]),...(c.geoBroadcasts||[]).filter(g=>!g.type||g.type.shortName==="TV"||g.type.shortName==="Streaming").map(g=>g.media&&g.media.shortName).filter(Boolean)])];d[ab]={tvs,score:+cp.score||0,state:st.state,detail:st.shortDetail,proj,home:cp.homeAway==="home",date:ev.date,name:cp.team.shortDisplayName,logo:cp.team.logo,rec:(cp.records||[])[0]?.summary,opp:op?{ab:op.team.abbreviation,name:op.team.shortDisplayName,logo:op.team.logo,score:+op.score||0,rec:(op.records||[])[0]?.summary}:null}})});teams.forEach(t=>{if(!d[t])d[t]={bye:true}});data[i]=d;cache[i]=d;lsSet("ds_cache",cache)}catch(e){fails++}}
 function curWeek(){for(let i=0;i<W.length;i++){if(status(i)!=="past")return i}return W.length-1}
 async function refreshAll(){fails=0;await Promise.all(W.map((_,i)=>loadWeek(i)));stamp();render()}
 async function refreshCur(){fails=0;const c=curWeek();await loadWeek(c);if(c>0&&status(c-1)==="past"&&(data[c-1]&&Object.values(data[c-1]).some(x=>x.state==="in")))await loadWeek(c-1);stamp();render()}
