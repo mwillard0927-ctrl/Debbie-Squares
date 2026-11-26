@@ -18,11 +18,15 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 .wk{border:1px solid var(--line);padding:8px 6px;text-align:center;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;min-width:0}
 .wk.cur{background:var(--cur)}
 .wk h3{margin:0 0 4px;font-size:13px}
-.tg{display:inline-grid;grid-template-columns:auto auto;column-gap:8px;row-gap:3px;font-size:12px;text-align:left;max-width:100%}
-.tg .n{white-space:nowrap}
+.tg{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;row-gap:3px;font-size:12px;text-align:left;max-width:100%}
+.tg .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tg .s{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .st{font-size:9px;color:var(--mute);font-weight:400}
-.st.live{color:var(--live);font-weight:700}
+.st{white-space:normal}.st.live{color:var(--live);font-weight:700}
+.wk.lvw{box-shadow:inset 0 0 0 3px var(--live)}
+.lvb{display:inline-block;background:var(--live);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:6px;margin-left:4px;vertical-align:middle;animation:pl 1.2s ease-in-out infinite}
+@keyframes pl{50%{opacity:.45}}
+.tot .pj{display:block;font-size:10px;color:var(--mute);font-weight:600}
 .tot{border-top:1px solid var(--line);margin-top:4px;padding-top:3px;font-weight:700;font-size:13px}
 .tot.proj{color:var(--mute);font-weight:600}
 .hl{font-size:10px;margin-top:3px;color:var(--mute)}
@@ -65,10 +69,10 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <div id="help" style="display:none"><h2>How to use</h2><div class="sub">Debbie's Squares</div>
 <h4>The main screen</h4><ul>
 <li>Each square is one week of the season, showing your 3 teams for that week.</li>
-<li>The week happening now is highlighted in <b>yellow</b>.</li>
-<li><b>Final</b> under a score means the game is over. A <b style="color:var(--live)">red</b> clock (like "Q3 4:12") means the game is live right now.</li>
+<li>The current week (or, between weeks, the next week coming up) is highlighted in <b>yellow</b>.</li>
+<li><b>Final</b> under a score means the game is over.</li><li>When a game is on right now, that week gets a <b style="color:var(--live)">red border</b> and a flashing <b style="color:var(--live)">LIVE</b> tag, and the game clock (like "2:00 - 2nd") shows in red under the score.</li>
 <li>Scores with a <b>~</b> (like ~21) are <b>projected</b> points from the betting lines for games not played yet.</li>
-<li><b>Total</b> adds up your teams' points for the week. <b>Projected</b> is the expected total before the games are played.</li>
+<li><b>Total</b> adds up your teams' points so far. If some games haven't been played yet, it also shows "+ ~N still to play". <b>Projected</b> is the expected total before any games are played.</li>
 <li><b>BYE</b> means that team doesn't play that week.</li></ul>
 <h4>See a week up close</h4><ul>
 <li><b>Tap any week</b> to open it full screen.</li>
@@ -103,7 +107,7 @@ const data={};const hl=ls("ds_hl",{});
 Object.keys(SNAP).forEach(k=>data[+k.slice(1)-1]=SNAP[k]);
 const cache=ls("ds_cache",{});Object.keys(cache).forEach(k=>{data[k]=cache[k]});
 function status(w){const now=new Date();const[s,e]=rng(W[w][0]);if(now>new Date(e.getTime()+6*3600e3))return"past";if(now>=s)return"cur";return"up"}
-function render(){const g=document.getElementById("grid");g.innerHTML="";W.forEach(([lbl,teams],i)=>{const st=status(i);const d=data[i]||{};const el=document.createElement("div");el.className="wk"+(st==="cur"?" cur":"");let h=`<h3>Week ${i+1}</h3><div class="tg">`;let tot=0,any=false,proj=0,anyP=false;teams.forEach(t=>{const x=d[t];let v="",s="",cls="";if(x){if(x.bye){v="BYE"}else if(x.state==="pre"){if(x.proj!=null){v="~"+x.proj;proj+=x.proj;anyP=true;s="proj"}else{v="–";s="no line yet"}}else{v=x.score;tot+=x.score;any=true;s=x.state==="in"?x.detail:"Final";cls=x.state==="in"?" live":""}}h+=`<div class="n">${N[t]}</div><div class="s">${v}`+(s?`<div class="st${cls}">${s}</div>`:"")+`</div>`});h+=`</div>`;if(any)h+=`<div class="tot">Total: ${tot}</div>`;else if(anyP)h+=`<div class="tot proj">Projected: ~${proj}</div>`;else if(st!=="up"&&!data[i])h+=`<div class="tot proj">scores coming</div>`;const r=hl[i];if(st==="past"&&r&&(r.high!=null||r.low!=null))h+=`<div class="hl">High <span class="h">${r.high??"–"}</span> · Low <span class="l">${r.low??"–"}</span></div>`;el.innerHTML=h;if(st==="past")press(el,i);tap(el,i);g.appendChild(el)});if(openI!=null)fillWk()}
+function render(){const g=document.getElementById("grid");g.innerHTML="";W.forEach(([lbl,teams],i)=>{const st=status(i);const d=data[i]||{};const el=document.createElement("div");const isLive=teams.some(t=>d[t]&&d[t].state==="in");el.className="wk"+(i===curWeek()?" cur":"")+(isLive?" lvw":"");let h=`<h3>Week ${i+1}${isLive?'<span class="lvb">LIVE</span>':""}</h3><div class="tg">`;let tot=0,any=false,proj=0,anyP=false;teams.forEach(t=>{const x=d[t];let v="",s="",cls="";if(x){if(x.bye){v="BYE"}else if(x.state==="pre"){if(x.proj!=null){v="~"+x.proj;proj+=x.proj;anyP=true;s="proj"}else{v="–";s="no line yet"}}else{v=x.score;tot+=x.score;any=true;if(x.state==="in"&&x.proj!=null){}s=x.state==="in"?x.detail:"Final";cls=x.state==="in"?" live":""}}h+=`<div class="n">${N[t]}</div><div class="s">${v}`+(s?`<div class="st${cls}">${s}</div>`:"")+`</div>`});h+=`</div>`;if(any)h+=`<div class="tot">Total: ${tot}`+(anyP?`<span class="pj">+ ~${proj} still to play</span>`:"")+`</div>`;else if(anyP)h+=`<div class="tot proj">Projected: ~${proj}</div>`;else if(st!=="up"&&!data[i])h+=`<div class="tot proj">scores coming</div>`;const r=hl[i];if(st==="past"&&r&&(r.high!=null||r.low!=null))h+=`<div class="hl">High <span class="h">${r.high??"–"}</span> · Low <span class="l">${r.low??"–"}</span></div>`;el.innerHTML=h;if(st==="past")press(el,i);tap(el,i);g.appendChild(el)});if(openI!=null)fillWk()}
 function tap(el,i){el.addEventListener("click",()=>{if(el._held){el._held=false;return}openWk(i)})}
 function press(el,i){let t;const start=()=>{el._held=false;t=setTimeout(()=>{el._held=true;if(navigator.vibrate)navigator.vibrate(30);ask(i)},550)};const stop=()=>clearTimeout(t);el.addEventListener("touchstart",start,{passive:true});el.addEventListener("touchend",stop);el.addEventListener("touchmove",stop);el.addEventListener("mousedown",start);el.addEventListener("mouseup",stop);el.addEventListener("mouseleave",stop);el.addEventListener("contextmenu",e=>e.preventDefault())}
 function dialog(title,val){return new Promise(res=>{const m=document.getElementById("modal"),inp=document.getElementById("minp");document.getElementById("mtitle").textContent=title;inp.value=val??"";m.style.display="flex";setTimeout(()=>inp.focus(),50);const ok=document.getElementById("mok"),cx=document.getElementById("mcx");const done=v=>{m.style.display="none";ok.onclick=cx.onclick=null;res(v)};ok.onclick=()=>done(inp.value===""?null:+inp.value);cx.onclick=()=>done(undefined)})}
