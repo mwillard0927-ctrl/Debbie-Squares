@@ -141,7 +141,7 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <div id="cards"></div>
 <button id="othb" style="display:block;width:100%;margin-top:14px;font:700 15px -apple-system,system-ui,sans-serif;padding:12px;border-radius:10px;border:2px solid var(--line);background:#ffd54a;color:#000">👀 Other people's scorecards</button>
 <div class="bar"><button id="addb">Add your own squares</button><button id="helpb">How to use this app</button><button id="shareb">Share this app</button></div>
-<div style="text-align:center"><button id="alb" style="display:inline-block;margin:10px 4px 0">🔔 Game alerts: Off</button><button id="plb0" style="display:inline-block;margin:10px 4px 0;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink)">🏆 Leaderboard</button><button id="tvb" style="display:inline-block;margin:10px 4px 0;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink)">📺 My TV</button></div>
+<div style="text-align:center"><button id="alb" style="display:inline-block;margin:10px 4px 0">🔔 Game alerts: Off</button><button id="plb0" style="display:inline-block;margin:10px 4px 0;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink)">🏆 Leaderboard</button><button id="tmb" style="display:inline-block;margin:10px 4px 0;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink)">🏈 Team schedule</button><button id="tvb" style="display:inline-block;margin:10px 4px 0;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink)">📺 My TV</button></div>
 <div id="help" style="display:none"><h2>How to use</h2><div class="sub" id="hsub">Debbie's Squares</div>
 <h4>The main screen</h4><ul>
 <li>Each square is one week of the season, showing your 3 teams for that week.</li>
@@ -158,6 +158,7 @@ header{background:#000;text-align:center;padding:14px 8px;border-radius:8px 8px 
 <h4>Top of the screen</h4><ul>
 <li>The black bar shows your <b>next game</b>: the matchup, how long until kickoff, and the channel. When a game is on, it shows the live score instead.</li>
 <li><b>Season total</b> adds up all your points so far (for the Grand Prize), plus the projected points still to come. <b>Tap it</b> to see a chart of every week.</li></ul>
+<h4>🏈 Team schedule</h4><ul><li>Tap <b>🏈 Team schedule</b> and pick any NFL team to see all of its upcoming games: the week, opponent, day and time, and how <b>you</b> can watch each one based on your My TV city and services. Bye weeks are shown too.</li></ul>
 <h4>📺 My TV (how to watch)</h4><ul>
 <li>Tap <b>📺 My TV</b> (under the buttons) to pick the <b>city you live in</b> and check what you watch on: antenna, cable, live TV streaming, Prime Video, Netflix, Peacock, ESPN, Paramount+, NFL+, Sunday Ticket.</li>
 <li>The app then shows each game's local channel, whether it's free with an antenna, and whether you can watch it with what you have.</li>
@@ -484,6 +485,18 @@ async function claimName(n){if(!SUPA_URL.startsWith("https://"))return true;try{
 
 // ---- bye weeks: a team on bye keeps its score from its previous game ----
 function carry(i,t){for(let j=i-1;j>=0;j--){const e=all[j]&&all[j][t];if(e&&!e.bye)return{j,score:e.score,state:e.state,proj:e.proj,opp:e.opp}}return null}
+
+// ---- team schedule: pick any team, see upcoming games and how to watch ----
+function openTeam(sel){openI=null;const t=sel||ls("ds_team","DET");lsSet("ds_team",t);const now=Date.now();let rows="",n=0;
+W.forEach(([lbl],i)=>{const x=all[i]&&all[i][t];if(x&&!x.bye){if(x.state==="post")return;const dt=x.date?new Date(x.date):null;if(dt&&dt.getTime()<now-5*3600e3&&x.state!=="in")return;n++;
+ const when=x.state==="in"?`<span class="lvb">LIVE</span> ${esc(x.detail||"")} · ${x.score}–${x.opp?x.opp.score:""}`:(dt?dt.toLocaleString([],{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Time TBA");
+ rows+=`<div class="gm"><div class="row mine">${x.logo?`<img src="${x.logo}" alt="">`:""}<span class="nm"><b>Week ${i+1}</b> · ${x.home?"vs":"@"} ${x.opp?esc(x.opp.name):""}</span>${x.proj!=null&&x.state==="pre"?`<span class="sc" style="font-size:16px">~${x.proj}</span>`:""}</div><div class="meta">${when}</div>${watch(x,t)}</div>`}
+ else if(fetched[i]&&!x&&rng(lbl)[1].getTime()>now){n++;rows+=`<div class="gm"><div class="row mine"><span class="nm"><b>Week ${i+1}</b> · BYE</span></div><div class="meta">No game (${lbl})</div></div>`}});
+show(`<h2>Team schedule</h2><div class="sub">Upcoming games and how you can watch them</div>
+<label class="fld"><span>Pick a team</span><select id="tsel" style="width:100%;font-size:16px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">${Object.keys(N).sort((a,b)=>N[a].localeCompare(N[b])).map(k=>`<option value="${k}"${k===t?" selected":""}>${N[k]}</option>`).join("")}</select></label>
+<p class="sub" style="text-align:left">Based on your <a href="#" class="tvset" style="color:#1565c0;font-weight:700">📺 My TV</a> settings. Channels are added as the NFL announces them.</p>
+${rows||`<p class="sub">No upcoming games found for ${esc(N[t])} yet.</p>`}<button class="closebar">Close</button>`);
+document.getElementById("tsel").onchange=e=>openTeam(e.target.value)}
 // ---- on-pace tracker ----
 function typical(){const H=[],L=[];Object.keys(hl).forEach(k=>{const v=hl[k];if(v&&v.high!=null)H.push(v.high);if(v&&v.low!=null)L.push(v.low)});const av=a=>a.length?Math.round(a.reduce((p,q)=>p+q,0)/a.length):null;return{H:av(H),L:av(L),n:Math.max(H.length,L.length)}}
 function paceHTML(i,big,tl){const r=weekTotals(i,tl);if(r.done||(!r.any&&!r.anyP))return"";const fin=r.tot+r.proj;const T=typical();if(T.H==null&&T.L==null)return big?`<div class="vs n" style="text-align:center;font-size:13px">On pace for ~${fin}</div>`:"";
@@ -539,6 +552,7 @@ h+=paceHTML(i,true,base);if(own&&any&&!anyP&&!teams.some(t=>d[t]&&d[t].state==="
 if(own&&CARDS.length>1)h+=`<div class="wl" style="font-weight:800;margin:12px 0 6px;text-align:center">Your scorecards this week · best shot first</div><div class="crow">${cardsChipHTML(i)}</div>`;if(!own)h+=`<button class="btn alt" id="wkb" style="width:100%;margin-top:10px">← ${esc(wkOwner.name)}'s scorecard</button>`;h+=`<button class="closebar">Close</button>`;ovc.innerHTML=h;const rb=document.getElementById("rcp");if(rb)rb.onclick=()=>makeRecap(i);ovc.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>{switchCard(+b.dataset.ck,true);openWk(i)});const wb=document.getElementById("wkb");if(wb)wb.onclick=()=>{otherView=wkOwner;wkOwner=null;openI=null;fillOther();ovc.scrollTop=0}}
 // ---- Help ----
 document.getElementById("tvb").onclick=()=>openTV();
+document.getElementById("tmb").onclick=()=>openTeam();
 document.getElementById("othb").onclick=()=>openOthers();
 document.getElementById("plb0").onclick=()=>openBoard();
 document.getElementById("helpb").onclick=()=>{openI=null;show(document.getElementById("help").innerHTML)};
